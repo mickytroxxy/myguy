@@ -24,10 +24,35 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
-      }
+      },
+      "package": "com.empiredigitals.doneDeal"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "24db1313-06fd-4221-8515-2f004d062312"
+      }
+    },
+    "plugins": [
+      [
+        "./withAndroidPickFirst",
+        {
+          "paths": [
+            "lib/**/libfbjni.so",
+            "lib/**/libc++_shared.so",
+            "lib/armeabi-v7a/libc++_shared.so",
+            "lib/arm64-v8a/libc++_shared.so"
+          ]
+        }
+      ],
+      [
+        "@config-plugins/react-native-blob-util"
+      ],
+      [
+        "@config-plugins/react-native-pdf"
+      ]
+    ]
   }
 }
