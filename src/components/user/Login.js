@@ -18,15 +18,12 @@ const Login = memo(({navigation}) => {
     if(formData.phoneNumber.length > 9 && formData.password.length > 5){
       const phoneNumber = phoneNoValidation(formData.phoneNumber,countryData.dialCode);
       phoneNumber && loginApi(phoneNumber,formData.password,(response)=>{
-        if(response[0]){
-          if(response.length > 0){
-            saveUser(response[0]);
-          }else{
-            showToast("Invalid login details")
-          }
+        if(response.length > 0){
+          saveUser(response[0]);
+        }else{
+          showToast("Invalid login details")
         }
       })
-      //setAccountInfo({fname:'Lameck Ndhlovu',address:{latitude:'6384949',longitude:'7283939',text:'8590 Cassiopeia street, devland Soweto'},avatar:'https://d2r55xnwy6nx47.cloudfront.net/uploads/2019/07/Olivier_1500_Trptch.jpg',phoneNumber:'0658016132',id:'DN508917'})
     }else{
       showToast("Please properly fill in before proceeding!");
     }

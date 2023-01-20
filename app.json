@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "doneDeal",
+    "name": "The StartUp",
     "slug": "doneDeal",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -18,14 +18,43 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "bundleIdentifier": "com.empiredigitals.doneDeal",
+      "supportsTablet": false,
+      "buildNumber": "1.0.0",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Your photo will be used as a profile picture or avatar. This helps scanners to identify the product owner.",
+        "NSPhotoLibraryUsageDescription":"Your photo will be used as a profile picture or avatar. This helps scanners to identify the product owner",
+        "NSPhotoLibraryAddUsageDescription": "Your photo will be used as a profile picture or avatar. This helps scanners to identify the product owner",
+        "NSLocationWhenInUseUsageDescription": "We need to know your current location to find the near places and nearby users. Do you allow us to use location service on this device ?",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "We need to know your current location to find the near places and nearby users. Do you allow us to use location service on this device ?",
+        "NSLocationAlwaysUsageDescription": "We need to know your current location to find the near places and nearby users. Do you allow us to use location service on this device ?"
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#FFFFFF"
       },
-      "package": "com.empiredigitals.doneDeal"
+      "googleServicesFile": "./google-services.json",
+      "package": "com.empiredigitals.doneDeal",
+      "permissions": [
+        "CAMERA",
+        "WRITE_EXTERNAL_STORAGE",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "RECORD_VIDEO",
+        "RECORD_AUDIO",
+        "LOCATION",
+        "READ_EXTERNAL_STORAGE",
+        "NOTIFICATIONS"
+      ],
+      "versionCode": 10001,
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyALlGfOwa0WOlQk9MgXIB6vW0YH2tmi0EA"
+        },
+        "googleMobileAdsAppId": "ca-app-pub-7273251331335061~4202453362"
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"

@@ -1,4 +1,4 @@
-import { createStackNavigator } from '@react-navigation/stack';
+import { createNativeStackNavigator as createStackNavigator } from '@react-navigation/native-stack';
 import React, {useState,useContext } from "react";
 import { StyleSheet, View, Dimensions ,Image,ScrollView, Platform,TouchableOpacity,Text,TextInput, AppState} from "react-native";
 import {MaterialCommunityIcons,AntDesign,Feather,Ionicons, FontAwesome } from "@expo/vector-icons";
@@ -30,35 +30,30 @@ const ConfirmScreen = ({navigation,route}) =>{
     )
 };
 const PageContent = ({navigation,route}) =>{
-    const {appState:{saveUser,fontFamilyObj:{fontBold,fontLight},showToast,cart} } = useContext(AppContext);
+    const {appState:{saveUser,fontFamilyObj:{fontBold,fontLight},showToast} } = useContext(AppContext);
     const [confirmationCode,setConfirmationCode] = useState('');
     const confirm = () =>{
         if(confirmationCode.toString() === obj.code.toString()){
             const phoneNumber = obj.phoneNumber;
             const id = obj.fname.toUpperCase().slice(0,2) + Math.floor(Math.random()*8999999+1000009).toString();
-            obj = {...obj,id}
+            const documents = 5;
+            const signatures = 2;
+            const plan = "FREE PLAN"
+            obj = {...obj,id,documents,signatures,plan,avatar:''}
             getUserDetailsByPhone(phoneNumber,(response) => {
                 if(response.length === 0){
                     if(createData("clients",id,obj)){
                         saveUser(obj);
-                        if(cart.length > 0){
-                          navigation.navigate("DeliveryInfo");
-                        }else{
-                          navigation.goBack();
-                          navigation.goBack();
-                        }
+                        navigation.goBack();
+                        navigation.goBack();
                     }
                 }else{
                     const client = response[0]
                     const newObj = {...obj,id:client.id,avatar:client.avatar}
                     updateData("clients",client.id,newObj)
                     saveUser(newObj);
-                    if(cart.length > 0){
-                        navigation.navigate("DeliveryInfo");
-                    }else{
-                        navigation.goBack();
-                        navigation.goBack();
-                    }
+                    navigation.goBack();
+                    navigation.goBack();
                 }
             })
         }else{

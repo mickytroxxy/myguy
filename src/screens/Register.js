@@ -1,13 +1,10 @@
-import { createStackNavigator } from '@react-navigation/stack';
+import { createNativeStackNavigator as createStackNavigator } from '@react-navigation/native-stack';
 import React, {useState,useContext } from "react";
 import { StyleSheet, View, Dimensions ,Image,ScrollView, Platform,TouchableOpacity,Text,TextInput, AppState} from "react-native";
 import {FontAwesome,AntDesign,Feather,Ionicons } from "@expo/vector-icons";
 import AisInput from '../components/forms/AisInput';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AppContext } from '../context/AppContext';
-import Location from '../components/forms/Location';
-import { createData, getUserDetails, getUserDetailsByPhone } from '../context/Api';
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import CountrySelector from '../components/forms/CountrySelector';
 const RootStack = createStackNavigator();
 const Register = ({navigation}) =>{
@@ -33,17 +30,16 @@ const PageContent = ({navigation}) =>{
     const {appState:{
       setConfirmDialog,
       showToast,
-      cart,
       sendSms,
       phoneNoValidation,
       countryData,
       fontFamilyObj:{fontBold}},
     } = useContext(AppContext);
-    const [formData,setFormData] = useState({phoneNumber:'',fname:'',email:'',password:''});
+    const [formData,setFormData] = useState({phoneNumber:'',fname:'',email:'',referredBy:'',password:''});
     const handleChange = (field,value) => setFormData(v =>({...v, [field] : value}));
     const register = () =>{
       if(formData.fname !== '' && formData.password.length > 5 && formData.phoneNumber.length > 7 && formData.email.length > 6){
-        setConfirmDialog({isVisible:true,text:`Hi ${formData.fname}, please confirm if you have entered the correct details`,okayBtn:'CONFIRM',cancelBtn:'Cancel',response:(res) => { 
+        setConfirmDialog({isVisible:true,text:`Hi ${formData.fname}, please confirm if you have entered the correct details`,okayBtn:'CONFIRM',severity:true,cancelBtn:'Cancel',response:(res) => { 
           const phoneNumber = phoneNoValidation(formData.phoneNumber,countryData.dialCode);
           if(phoneNumber){
             if(res){
@@ -67,16 +63,17 @@ const PageContent = ({navigation}) =>{
             <ScrollView style={{padding:10}}>
               <CountrySelector />
               <AisInput attr={{field:'phoneNumber',icon:{name:'phone',type:'Feather',min:5,color:'#5586cc'},keyboardType:'phone-pad',placeholder:'Phone number',color:'#009387',handleChange}} />
-              <AisInput attr={{field:'fname',icon:{name:'user',type:'Feather',min:5,color:'#5586cc'},keyboardType:null,placeholder:'Full Name',color:'#009387',handleChange}} />
+              <AisInput attr={{field:'fname',icon:{name:'user',type:'Feather',min:5,color:'#5586cc'},keyboardType:null,placeholder:'Full Name Or Company Name',color:'#009387',handleChange}} />
               <AisInput attr={{field:'email',icon:{name:'mail',type:'Feather',min:5,color:'#5586cc'},keyboardType:null,placeholder:'Email Address',color:'#009387',handleChange}} />
-              <AisInput attr={{field:'password',icon:{name:'lock',type:'Feather',color:'#5586cc',min:6},keyboardType:'numeric',placeholder:'Password',color:'#009387',handleChange}} />
+              <AisInput attr={{field:'referredBy',icon:{name:'user-o',type:'FontAwesome',min:5,color:'#5586cc'},keyboardType:null,placeholder:'Referred By (User ID eg ML...) optional',color:'#009387',handleChange}} />
+              <AisInput attr={{field:'password',icon:{name:'lock',type:'Feather',color:'#5586cc',min:6},keyboardType:null,placeholder:'Password',color:'#009387',handleChange}} />
               
               <View style={{alignItems:'center',marginTop:15}}>
                 <TouchableOpacity onPress={register}>
                   <FontAwesome name='check-circle' size={120} color="#14678B"></FontAwesome>
                 </TouchableOpacity>
             </View>
-            {cart.length === 0 && <TouchableOpacity style={{marginTop:15}} onPress={()=>navigation.goBack()}><Text style={{fontFamily:fontBold,textAlign:'center',color:'#757575'}}>Have an account? Login Now</Text></TouchableOpacity>}
+            <TouchableOpacity style={{marginTop:15}} onPress={()=>navigation.goBack()}><Text style={{fontFamily:fontBold,textAlign:'center',color:'#757575'}}>Have an account? Login Now</Text></TouchableOpacity>
             </ScrollView>
         </LinearGradient>
       </View>

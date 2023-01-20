@@ -4,12 +4,10 @@ import { StyleSheet, ScrollView, Text, View, Modal, Alert, Dimensions , Touchabl
 import {FontAwesome,MaterialIcons,Ionicons,Feather} from "react-native-vector-icons";
 import { AppContext } from '../context/AppContext';
 import DateTimeSelector from './Modals/DateTimeSelector';
-import AddToCart from './Modals/AddToCart';
-import ProductOwner from './Modals/ProductOwner';
 import ModalSelector from './Modals/ModalSelector';
 import CountryList from './Modals/CountryList';
 import Input from './Modals/Input';
-import DownloadFile from './Modals/DownloadFile';
+import EditDetails from './Modals/EditDetails';
 const ModalCoontroller = props =>{
     const {appState:{fontFamilyObj}} = React.useContext(AppContext)
     const attr = props.modalState.attr;
@@ -27,12 +25,11 @@ const ModalCoontroller = props =>{
                         </TouchableOpacity>
                     </View>
                     <ScrollView showsVerticalScrollIndicator={false} style={{marginTop:5}}>
-                        {(props.modalState.attr.headerText === "ADD TO CART") && <AddToCart attr={attr}/>}
-                        {(props.modalState.attr.headerText === "PRODUCT OWNER") && <ProductOwner attr={attr}/>}
                         {(props.modalState.attr.headerText === "ENTER CODE") && <Input attr={attr}/>}
-                        {(props.modalState.attr.headerText === "DOWNLOAD FILE") && <DownloadFile attr={attr}/>}
+                        {(props.modalState.attr.headerText === "FACEBOOK LINK" || props.modalState.attr.headerText === "INSTAGRAM LINK" || props.modalState.attr.headerText === "WEBSITE" || props.modalState.attr.headerText === "VIDEO LINK" || props.modalState.attr.headerText === "WHATSAPP NUMBER" || props.modalState.attr.headerText === "EMAIL ADDRESS" || props.modalState.attr.headerText === "PHONE NUMBER" || props.modalState.attr.headerText === "AI DOCUMENT GENERATION" || props.modalState.attr.headerText === "BIO-METRIC SIGNATURE" || props.modalState.attr.headerText === "SUPPORT THE PROJECT" || props.modalState.attr.headerText === "ID | PASSPORT NUMBER") && <Input attr={attr}/>}
+                        {(props.modalState.attr.headerText === "EDIT BUSINESS PLAN") && <EditDetails attr={attr}/>}
                         {(props.modalState.attr.headerText === "SELECT COUNTRY | REGION") && <CountryList attr={attr}/>}
-                        {(props.modalState.attr.headerText === "SELECT DOCUMENT" || props.modalState.attr.headerText === "SELECT GENDER" || props.modalState.attr.headerText === "SELECT CATEGORY") && <ModalSelector attr={attr}/>}
+                        {(props.modalState.attr.headerText === "SELECT DOCUMENT" || props.modalState.attr.headerText === "SELECT INDUSTRY" || props.modalState.attr.headerText === "SELECT CATEGORY") && <ModalSelector attr={attr}/>}
                         {(props.modalState.attr.headerText === "SELECT DATE" || props.modalState.attr.headerText === "SELECT TIME") && <DateTimeSelector attr={attr}/>}
                     </ScrollView>
                 </View>

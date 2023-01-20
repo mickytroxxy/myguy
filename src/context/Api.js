@@ -1,7 +1,9 @@
 import { initializeApp } from "firebase/app";
+import {initializeFirestore} from 'firebase/firestore';
 import { getFirestore, collection, getDocs, doc, setDoc, query, where, deleteDoc, updateDoc, onSnapshot   } from 'firebase/firestore';
 import { getStorage, ref, getDownloadURL, uploadBytesResumable } from "firebase/storage";
 import * as st from "firebase/storage";
+import axios from "axios";
 const firebaseConfig = {
     apiKey: "AIzaSyADeaY6ODRICSJoK4ThUXedwMrFwc2ZP40",
     authDomain: "myguy-a78d0.firebaseapp.com",
@@ -11,7 +13,11 @@ const firebaseConfig = {
     appId: "1:743810339840:web:e9a54dd0e53c8cd61074e5"
 };
 const app = initializeApp(firebaseConfig);
-const db = getFirestore();
+//const db = getFirestore();
+const db = initializeFirestore(app, {
+    experimentalForceLongPolling: true,
+    useFetchStreams: false,
+});
 export const createData = async (tableName,docId,data) => {
     try {
         await setDoc(doc(db, tableName, docId), data);
@@ -31,8 +37,39 @@ export const loginApi = async (phoneNumber,password,cb) => {
     }
 }
 export const getUserDetails = async (accountId,cb) => {
+
     try {
         const querySnapshot = await getDocs(query(collection(db, "clients"), where("id", "==", accountId)));
+        const data = querySnapshot.docs.map(doc => doc.data());
+        cb(data)
+    } catch (e) {
+        cb(e);
+    }
+}
+export const getBusinessPlan = async (cb) => {
+
+    try {
+        const querySnapshot = await getDocs(query(collection(db, "businessPlans")));
+        const data = querySnapshot.docs.map(doc => doc.data());
+        cb(data)
+    } catch (e) {
+        cb(e);
+    }
+}
+export const getAllProjects = async (cb) => {
+
+    try {
+        const querySnapshot = await getDocs(query(collection(db, "projects"), where("isActive", "==", true)));
+        const data = querySnapshot.docs.map(doc => doc.data());
+        cb(data)
+    } catch (e) {
+        cb(e);
+    }
+}
+export const getMyProjects = async (projectOwner,cb) => {
+
+    try {
+        const querySnapshot = await getDocs(query(collection(db, "projects"), where("projectOwner", "==", projectOwner)));
         const data = querySnapshot.docs.map(doc => doc.data());
         cb(data)
     } catch (e) {
@@ -48,54 +85,36 @@ export const getDocuments = async (documentOwner,cb) => {
         cb(e);
     }
 }
+export const getDataList = async (cb) => {
+    try {
+        const querySnapshot = await getDocs(query(collection(db, "dataList")));
+        const data = querySnapshot.docs.map(doc => doc.data());
+        cb(data)
+    } catch (e) {
+        cb(e);
+    }
+}
+export const getSignies = async (signatureId,cb) => {
+    try {
+        const querySnapshot = await getDocs(query(collection(db, "signatures"), where("signatureId", "==", signatureId)));
+        const data = querySnapshot.docs.map(doc => doc.data());
+        cb(data)
+    } catch (e) {
+        cb(e);
+    }
+}
+export const getDocumentsById = async (documentId,cb) => {
+    try {
+        const querySnapshot = await getDocs(query(collection(db, "documents"), where("documentId", "==", documentId)));
+        const data = querySnapshot.docs.map(doc => doc.data());
+        cb(data)
+    } catch (e) {
+        cb(e);
+    }
+}
 export const getUserDetailsByPhone = async (phoneNumber,cb) => {
     try {
         const querySnapshot = await getDocs(query(collection(db, "clients"), where("phoneNumber", "==", phoneNumber)));
-        const data = querySnapshot.docs.map(doc => doc.data());
-        cb(data)
-    } catch (e) {
-        cb(e);
-    }
-}
-export const getMyProducts = async (accountId,cb) => {
-    try {
-        const querySnapshot = await getDocs(query(collection(db, "purchases"), where("accountId", "==", accountId)));
-        const data = querySnapshot.docs.map(doc => doc.data());
-        cb(data)
-    } catch (e) {
-        cb(e);
-    }
-}
-export const getTrending = async (cb) => {
-    try {
-        const querySnapshot = await getDocs(query(collection(db, "purchases")));
-        const data = querySnapshot.docs.map(doc => doc.data());
-        cb(data)
-    } catch (e) {
-        cb(e);
-    }
-}
-export const verifyItem = async (itemId,cb) => {
-    try {
-        const querySnapshot = await getDocs(query(collection(db, "productItems"), where("itemId", "==", itemId)));
-        const data = querySnapshot.docs.map(doc => doc.data());
-        cb(data)
-    } catch (e) {
-        cb(e);
-    }
-}
-export const getScans = async (productOwner,cb) => {
-    try {
-        const querySnapshot = await getDocs(query(collection(db, "scans"), where("productOwner", "==", productOwner)));
-        const data = querySnapshot.docs.map(doc => doc.data());
-        cb(data)
-    } catch (e) {
-        cb(e);
-    }
-}
-export const getProductList = async (cb) => {
-    try {
-        const querySnapshot = await getDocs(query(collection(db, "productList")));
         const data = querySnapshot.docs.map(doc => doc.data());
         cb(data)
     } catch (e) {
@@ -111,9 +130,9 @@ export const getContact = async (cb) => {
         cb(e);
     }
 }
-export const getCategories = async (cb) => {
+export const getSecrets = async (cb) => {
     try {
-        const querySnapshot = await getDocs(query(collection(db, "categories")));
+        const querySnapshot = await getDocs(query(collection(db, "secrets")));
         const data = querySnapshot.docs.map(doc => doc.data());
         cb(data)
     } catch (e) {
@@ -138,15 +157,31 @@ export const uploadFile = async (file,path,cb) =>{
     const url = await st.getDownloadURL(uploadTask.ref);
     cb(url)
 }
-export const uploadAsPDF = async (file,path,cb) =>{
-    const storage = st.getStorage(app);
-    const fileRef = st.ref(storage, path);
-    const response = await fetch(file);
-    const metadata = {contentType: 'application/pdf'};
-    const blob = await response.blob();
-    const uploadTask = await st.uploadBytesResumable(fileRef, blob,metadata);
-    const url = await st.getDownloadURL(uploadTask.ref);
-    cb(url)
+export const uploadPDF = async (uri,documentId,BASE_URL,cb)=>{
+    const apiUrl = BASE_URL+"/uploadPDF";
+    const name = uri.substr(uri.lastIndexOf('/') + 1);
+    const formData = new FormData();
+    formData.append('fileUrl', {uri,name,type: `application/pdf`});
+    formData.append('documentId', documentId);
+    try {
+        await axios({
+            method: "post",
+            url: apiUrl,
+            data: formData,
+            headers: {"Content-Type": "multipart/form-data"},
+        });
+        cb(true);
+    } catch(error) {
+        console.log(error)
+    }
+}
+export const signPDF = async (documentId,BASE_URL,cb)=>{
+    try {
+        const res = await axios.get(`${BASE_URL}/signPDF/${documentId}`);
+        cb(true)
+    } catch (e) {
+        cb(e);
+    }
 }
 export const submitToGoogle = async (image,cb) => {
     try {

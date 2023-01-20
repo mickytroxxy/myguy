@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "743810339840",
+    "project_id": "myguy-a78d0",
+    "storage_bucket": "myguy-a78d0.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:743810339840:android:b6a0be2e08f3cd851074e5",
+        "android_client_info": {
+          "package_name": "com.empiredigitals.doneDeal"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "743810339840-hpugqob1ph19h04o17ga6n4ferpi1ue5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCddaqUNp504jIugjmiT4rn69O6jzyx_j0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "743810339840-hpugqob1ph19h04o17ga6n4ferpi1ue5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

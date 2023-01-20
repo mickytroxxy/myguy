@@ -1,23 +1,16 @@
-import { createStackNavigator } from '@react-navigation/stack';
+import { createNativeStackNavigator as createStackNavigator } from '@react-navigation/native-stack';
 import React, {useRef,useContext, useState, useEffect, useCallback } from "react";
-import { StyleSheet, View, Image, Text, ScrollView, ActivityIndicator, TouchableOpacity, Dimensions} from "react-native";
+import { StyleSheet, View, Image, Text, ScrollView, ActivityIndicator, TouchableOpacity, Dimensions, Clipboard} from "react-native";
 import {Feather, FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { AppContext } from '../context/AppContext';
-import { createData, updateData, uploadAsPDF, uploadFile } from '../context/Api';
-import Pdf from 'react-native-pdf';
-import { QRCode } from 'react-native-custom-qr-codes-expo';
 import ViewShot from "react-native-view-shot";
-import {captureRef} from "react-native-view-shot";
 import { Configuration, OpenAIApi } from 'openai';
 import {printToFileAsync} from 'expo-print';
-import { shareAsync } from 'expo-sharing';
+import { updateData } from '../context/Api';
 const RootStack = createStackNavigator();
 let object;
 const { width, height } = Dimensions.get('window');
-const configuration = new Configuration({
-    apiKey: "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",
-});
-const openai = new OpenAIApi(configuration);
+
 const Results = ({navigation,route}) => {
     const {appState:{fontFamilyObj}} = useContext(AppContext);
     object = route.params;
@@ -39,20 +32,27 @@ const Results = ({navigation,route}) => {
     )
 };
 const PageContent = ({navigation}) =>{
-    const {appState:{showToast,handleFileUpload,accountInfo,fontFamilyObj:{fontBold,fontLight},documents,setDocuments} } = useContext(AppContext);
+    const {appState:{showToast,handleFileUpload,secrets,fontFamilyObj:{fontBold,fontLight},accountInfo,setAccountInfo} } = useContext(AppContext);
     const {item} = object;
+    const guideLines = item.guideLines;
     const {type,summary} = item;
     const [isLoading,setIsLoading] = useState(false);
     const [AIResults,setAIResults] = useState(null);
-    const [fakeImage,setFakeImage] = useState(null)
     const viewRef = useRef();
+    const configuration = new Configuration({
+        apiKey: secrets?.OPENAI_KEY
+    });
+    const openai = new OpenAIApi(configuration);
     const generateText = async (prompt) => {
         try {
             const completion = await openai.createCompletion({
-                model: 'text-davinci-003', prompt,temperature: 1, max_tokens: 4048,
+                model: 'text-davinci-003', 
+                prompt,
+                temperature: 1, 
+                max_tokens: 4048,
             });
             setIsLoading(false)
-            setAIResults(completion.data.choices[0].text)
+            setAIResults(completion.data.choices[0].text);
         } catch (error) {
             console.log(error)
             setIsLoading(false)
@@ -60,18 +60,13 @@ const PageContent = ({navigation}) =>{
     }
 
     const initializePrompt = useCallback(() => {
-        const prompt = `Generate a ${type} based on ${summary}`
-        setIsLoading(true)
+        const prompt = !guideLines ? `Generate a ${type} based on ${summary}` : `Generate a ${type} based on ${summary}, The result should be an array of object like [{section:"sectionText",content:"contentText"}]`;
         generateText(prompt)
+        setIsLoading(true)
     })
-    const saveDocument = () => {
-        captureRef(viewRef, {
-            format: "jpg",
-            quality: 1,
-          }).then((uri) => {
-            generatePDF(uri)
-          },(error) => console.error("Oops, snapshot failed", error)
-        );
+    const copyToClipboard = () => {
+        Clipboard.setString(AIResults)
+        showToast(AIResults)
     }
     let generatePDF = async () => {
         const html = `
@@ -95,10 +90,14 @@ const PageContent = ({navigation}) =>{
             },
         })
         await handleFileUpload(type,file.uri,navigation);
-        //await shareAsync(file.uri, { UTI: '.pdf', mimeType: 'application/pdf' });
+        const documents = accountInfo.documents - 1;
+        updateData("clients",accountInfo.id,{documents})
+        setAccountInfo(prevState => ({...prevState,documents}));
+        navigation.goBack();
+        navigation.goBack();
     }
     useEffect(() => {
-        //initializePrompt()
+        initializePrompt()
     },[])
     return(
         <View style={styles.container}>
@@ -117,22 +116,17 @@ const PageContent = ({navigation}) =>{
                             </ViewShot>
                             <View style={{flexDirection:'row',justifyContent:'space-between',paddingBottom:30}}>
                                 <TouchableOpacity onPress={initializePrompt} style={{borderWidth:1,borderColor:'#14678B',padding:15,borderRadius:10,marginTop:30}}><Text style={{fontFamily:fontBold,color:'#14678B'}}>RETRY</Text></TouchableOpacity>
-                                <TouchableOpacity onPress={initializePrompt} style={{borderWidth:1,borderColor:'#14678B',padding:15,borderRadius:10,marginTop:30}}><Text style={{fontFamily:fontBold,color:'#14678B'}}>COPY TEXT</Text></TouchableOpacity>
+                                <TouchableOpacity onPress={copyToClipboard} style={{borderWidth:1,borderColor:'#14678B',padding:15,borderRadius:10,marginTop:30}}><Text style={{fontFamily:fontBold,color:'#14678B'}}>COPY TEXT</Text></TouchableOpacity>
                                 <TouchableOpacity onPress={generatePDF} style={{borderWidth:1,borderColor:'#14678B',padding:15,borderRadius:10,marginTop:30}}><Text style={{fontFamily:fontBold,color:'#14678B'}}>UPLOAD</Text></TouchableOpacity>
                             </View>
                         </ScrollView>
                     }
                     {!AIResults && 
                         <View style={{flex:1,justifyContent:'center'}}>
-                            <Text style={{fontFamily:fontBold,textAlign:'center'}}>Failed To Generate Your {type} Document...</Text>
+                            <Text style={{fontFamily:fontBold,textAlign:'center'}}>Failed To Generate Your {type} Document. Please try to adjust your summary or check your internet connection...</Text>
                             <TouchableOpacity onPress={initializePrompt} style={{borderWidth:1,borderColor:'#14678B',padding:15,borderRadius:10,marginTop:30}}><Text style={{fontFamily:fontBold,color:'#14678B'}}>RETRY</Text></TouchableOpacity>
                         </View>
                     }
-                    {/* {fakeImage && 
-                        <ScrollView>
-                            <Image source={{uri:fakeImage}} resizeMode="contain" style={{width:width,height:700}} />
-                        </ScrollView>
-                    } */}
                 </View>
             }
         </View>

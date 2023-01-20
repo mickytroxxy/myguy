@@ -9,8 +9,11 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import * as Location from 'expo-location';
 import * as Permissions from 'expo-permissions';
 import * as ImagePicker from 'expo-image-picker';
-import { createData, getCategories, getProductList, uploadFile } from './Api';
+import { createData, getAllProjects, getDataList, getDocuments, getMyProjects, getSecrets, getUserDetails, updateData, uploadFile, uploadPDF } from './Api';
 import axios from 'axios';
+import { users } from './users';
+let return_url,cancel_url;
+const mechantId = 15759218;
 export const AppProvider = (props) =>{
     const [fontFamilyObj,setFontFamilyObj] = useState(null);
     const [accountInfo,setAccountInfo] = useState(null);
@@ -18,26 +21,70 @@ export const AppProvider = (props) =>{
     const [confirmDialog,setConfirmDialog] = useState({isVisible:false,text:'Would you like to come today for a fist?',okayBtn:'VERIFY',cancelBtn:'CANCEL',isSuccess:false})
     const [currentLocation,setCurrentLocation] = useState(null);
     const [countryData,setCountryData] = useState({dialCode:'+27',name:'South Africa',flag:'https://cdn.kcak11.com/CountryFlags/countries/za.svg'})
-    const [productCategories,setProductCategories] = useState([{category:'ANY',selected:true},{category:'SNEAKERS',selected:false},{category:'JACKETS',selected:false},{category:'BUCKET HATS',selected:false},{category:'SANDALS',selected:false},{category:'CAPS',selected:false},{category:'T-SHIRTS',selected:false},{category:'POLO NECKS',selected:false},{category:'DRESSES',selected:false},{category:'TIES',selected:false}]);
-    const [productList,setProductList] = useState(null)
-    const [cart,setCart] = useState([]);
+    const [secrets,setSecrets] = useState({BASE_URL:"https://myguy-server-production.up.railway.app",OPENAI_KEY:"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",AI_DOC_PRICE:15,SIGNATURE_PRICE:50,SMS_KEY:"aW5mb0BlbXBpcmVkaWdpdGFscy5vcmc6ZW1waXJlRGlnaXRhbHMxIUA="});
+    const [clients,setClients] = useState(null);
+    const [activeProfile,setActiveProfile] = useState(null);
+    const [myProjects,setMyProjects] = useState(null);
     const [documentTypes,setDocumentTypes] = useState(
         [
-            {type:'NON DISCLOSURE AGREEMENT',text:'A non-disclosure agreement (NDA) is a legal document that restricts access to or disclosure of confidential information shared between parties.',guideLines:[],hint:"Tell us more about your NDA, explain who is involved and what is it about"},
-            {type:'CONTRACT',text:'A contract is a legally binding agreement between two or more parties that establishes the terms and conditions of a relationship or exchange. It can be written or verbal, and outlines the rights and obligations of each party.',guideLines:["Offer","Acceptance","Consideration","Intention to create legal relations","Authority and capacity","Certainty"],hint:"What is your contract about? Who is it intended to reach, what are the terms and conditions, Explain the offer, consideration and the acceptance"},
-            {type:'RESUME (CV)',text:'A resume is a document that outlines your work experience, education, and skills to apply for jobs and show potential employers that you are qualified.',guideLines:["Cover Letter","Skills","Work History","School History","portfolio","Pitch"],hint:"Tell us about yourself, your ID or Passport, expected salary and current, notice period, what are your skills, work background, schools attended, do you have any portfolio if yes explain that to the AI, you can also include links. "},
-            {type:'GENERAL AGREEMENT',text:'A general agreement is a broad, overarching document that outlines the terms and conditions of a relationship or exchange between parties. It may not be as specific as a contract, but still establishes the terms and expectations for the parties involved.',guideLines:[],hint:"What are you agreeing about. How will this agreement be fulfilled? What are the terms and conditions"},
-            {type:'BUSINESS PROPOSAL',text:'A business proposal is a document that outlines a proposed partnership or arrangement between parties, including details about the products/services being offered and the terms of the deal. It is often used to secure new clients or partnerships.',guideLines:[],hint:"What is your proposal about and who is intended to read your proposal. What are the benefits and terms and conditions? Go in details to better your results"},
-            {type:'BUSINESS PLAN',text:'A business plan is a document that outlines the strategy and goals of a business, including details on operations, marketing, finance, and more. It guides the business`s activities and decision-making.',guideLines:["Executive Summary","The Business","Innovation And Viability","Market Analysis","Market Strategy","Mission And Vision","Financial Plan","The Deal"],hint:"Tell the AI about your business, market strategies, goals, vision and financial plan. Feed the AI as much information as you can."}
+            {type:'ID DOCUMENT',text:'A non-disclosure agreement (NDA) is a legal document that restricts access to or disclosure of confidential information shared between parties.',guideLines:null,hint:"ID DOCUMENT"},
+            {type:'NON DISCLOSURE AGREEMENT',text:'A non-disclosure agreement (NDA) is a legal document that restricts access to or disclosure of confidential information shared between parties.',guideLines:null,hint:"Tell us more about your NDA, explain who is involved and what is it about"},
+            {type:'BUSINESS PROPOSAL',text:'A business proposal is a document that outlines a proposed partnership or arrangement between parties, including details about the products/services being offered and the terms of the deal. It is often used to secure new clients or partnerships.',guideLines:0,hint:"What is your proposal about and who is intended to read your proposal. What are the benefits and terms and conditions? Go in details to better your results"},
+            {type:'BUSINESS PLAN',text:'A business plan is a document that outlines the strategy and goals of a business, including details on operations, marketing, finance, and more. It guides the business`s activities and decision-making.',guideLines:"Executive Summary, The Business, Innovation And Viability, Market Analysis, Market Strategy, Mission And Vision, Financial Plan and The Deal",hint:"Tell the AI about your business, market strategies, goals, vision and financial plan. Feed the AI as much information as you can."},
+            {type:'CONTRACT',text:'A contract is a legally binding agreement between two or more parties that establishes the terms and conditions of a relationship or exchange. It can be written or verbal, and outlines the rights and obligations of each party.',guideLines:"Offer, Acceptance, Consideration, Intention to create legal relations, Authority and capacity and Certainty",hint:"What is your contract about? Who is it intended to reach, what are the terms and conditions, Explain the offer, consideration and the acceptance"},
+            {type:'GENERAL AGREEMENT',text:'A general agreement is a broad, overarching document that outlines the terms and conditions of a relationship or exchange between parties. It may not be as specific as a contract, but still establishes the terms and expectations for the parties involved.',guideLines:0,hint:"What are you agreeing about. How will this agreement be fulfilled? What are the terms and conditions"},
         ]
     );
-    const [documents,setDocuments] = useState(null)
+    const [categories,setCategories] = useState([
+        {type:"SMALL BUSINESS",selected:true,attr:[
+            "SELECT INDUSTRY",
+            "Salon",
+            "Fast Food",
+            "Tuck Shop",
+            "Tarven"
+        ]},
+        {type:"STARTUP",selected:false,attr:[
+            "SELECT INDUSTRY",
+            "Technology",
+            "Software Development",
+            "Insurance",
+            "Automotive",
+            "Dating App",
+            "Transportation",
+            "Construction"
+        ]}
+    ]);
+    const [plans,setPlans] = useState([
+        {type:"STANDARD",selected:false,fee:600,documents:10,signatures:5,attr:[
+            "Visibility","Access To Crowd Funders","Access To Investors",
+            "+5 Bio-metric Signatures","+10 AI Document Generation",
+            "No Accountant Assigned"
+        ]},
+        {type:"PROFESSIONAL",selected:true,fee:2250,documents:30,signatures:10,attr:[
+            "100% Funding Guaranteed","Visibility","Access To Crowd Funders","Access To Investors",
+            "Access Up ZAR 3 000 000.00","+10 Bio-metric Signatures","+30 AI Document Generation",
+            "Accountant Is Assigned"
+        ]}
+    ])
+    const selectedCategory = categories.filter(item => item.selected)[0];
+    const [industry,setIndustry] = useState("");
+    const [documents,setDocuments] = useState([])
     let customFonts = {
         'fontLight': require('..//../fonts/MontserratAlternates-Light.otf'),
         'fontBold': require('..//../fonts/MontserratAlternates-Bold.otf'),
     };
-    React.useEffect( async ()=>{
+    React.useEffect(()=>{
         loadFontsAsync();
+        getSecrets(secrets => secrets.length > 0 && setSecrets(secrets[0]))
+        getAllProjects(projects => projects.length > 0 && setClients(projects));
+        getDataList((dataList) => {
+            if(dataList.length > 0){
+                setCategories(dataList[0].categories);
+                setDocumentTypes(dataList[0].documentTypes)
+                setPlans(dataList[0].plans)
+            }
+        });
+        //createData("dataList","123456",{documentTypes,categories,plans})
     },[]);
     const loadFontsAsync = async ()=> {
         await Font.loadAsync(customFonts);
@@ -58,7 +105,19 @@ export const AppProvider = (props) =>{
         const getUser = async() => {
             try {
                 const user = await AsyncStorage.getItem("user");
-                user && setAccountInfo(JSON.parse(user));
+                if(user){
+                    setAccountInfo(JSON.parse(user));
+                    getUserDetails(JSON.parse(user).id,(response)=>{
+                        if(response.length > 0){
+                            saveUser(response[0])
+                        }
+                    })
+                    getMyProjects(JSON.parse(user).id,(res) => {
+                        if(res.length > 0){
+                          setMyProjects(res);
+                        }
+                    })
+                }
             } catch (e) {
                 showToast(e);
             }
@@ -66,26 +125,17 @@ export const AppProvider = (props) =>{
         }
         getUser();
     },[])
+    useEffect(() => {
+        if(accountInfo){
+            getDocuments(accountInfo.id,(response) => {
+                setDocuments(response)
+            })
+        }
+    },[accountInfo])
     const saveUser = async user =>{
         try {
           await AsyncStorage.setItem("user", JSON.stringify(user));
           setAccountInfo(user);
-        } catch (e) {
-          showToast(e);
-        }
-    }
-    const checkGuestScan = async() => {
-        try {
-            const user = await AsyncStorage.getItem("guestScan");
-            return user;
-        } catch (e) {
-            showToast(e);
-            return null;
-        }
-    }
-    const saveScan = async user =>{
-        try {
-          await AsyncStorage.setItem("guestScan", JSON.stringify(user));
         } catch (e) {
           showToast(e);
         }
@@ -98,27 +148,157 @@ export const AppProvider = (props) =>{
             showToast(e);
         }
     }
-    const handleFileUpload = (documentType,file,navigation) => {
+    const handleFileUpload = (documentType,file,navigation,idNo) => {
         setConfirmDialog({isVisible:true,text:`You are about to upload a ${documentType} document. Press Upload to proceed`,okayBtn:'UPLOAD',cancelBtn:'Cancel',response:(res) => { 
             if(res){
                 const time = Date.now();
-                const documentId = (time + Math.floor(Math.random()*89999+10000)).toString()
-                uploadFile(file,`documents/${documentId}`, url => {
+                const documentId = documentType !== "ID DOCUMENT" ? (time + Math.floor(Math.random()*89999+10000)).toString() : idNo;
+                uploadPDF(file,documentId,secrets.BASE_URL, () => {
+                    const url = `/${documentId}.pdf`
                     const obj = {documentOwner:accountInfo.id,url,documentType,documentId,time,signies:[]};
-                    console.log(navigation)
                     if(createData("documents",documentId,obj)){
-                        setDocuments([...documents,obj])
-                        navigation.navigate("DocumentView",{documentType,documentId,url})
-                        showToast("Your file has been uploaded successfully!")
+                        showToast("Your file has been uploaded successfully!");
+                        getDocuments(accountInfo.id,(response) => setDocuments(response))
                     }
                 })
             }
         }})
     }
-    const appState = {
-        accountInfo,handleFileUpload,documentTypes,setDocumentTypes,documents,setDocuments,pickCurrentLocation,nativeLink,checkGuestScan,saveScan,setAccountInfo,saveUser,logout,fontFamilyObj,setModalState,setConfirmDialog,getLocation,sendPushNotification,showToast,takePicture,pickImage,sendSms,phoneNoValidation,productCategories,setProductCategories,productList,setProductList,cart,setCart,countryData,setCountryData
+    const handleUploadPhotos = (field,page,projectId) => {
+        let location = `${field}/${accountInfo.projectId}`;
+        if(field === "photos"){
+            location = `${field}/${accountInfo.projectId}/${(Date.now() +  Math.floor(Math.random()*89999+10000)).toString()}`;
+        }
+        if(field !== "selfiePhoto"){
+            setConfirmDialog({isVisible:true,text:`Would Like To Select From The Gallery Or You Would Like To Snap Using Your Camera?`,severity:false,okayBtn:'GALLERY',cancelBtn:'CAMERA',response:(res) => { 
+                if(res){
+                    pickImage(field,(response) => {
+                        uploadFile(response,location,(url) => {
+                            const photoId = (Date.now() + Math.floor(Math.random() * 899 + 1000)).toString()
+                            const value = field === 'photos' ? [...activeProfile.photos,{photoId,url}] : url;
+                            updateProfile(field,value)
+                            showToast("You "+field+" Has Been Successfully added!")
+                        })
+                    })
+                }else{
+                    snapAPhoto(field,location,projectId,page)
+                }
+            }})
+        }else{
+            snapAPhoto(field,location,projectId,page)
+        }
     }
-
+    const snapAPhoto = (field,location,projectId,page) =>{
+        takePicture(field,(response) => {
+            uploadFile(response,location,(url) => {
+                const photoId = (Date.now() + Math.floor(Math.random() * 899 + 1000)).toString()
+                const value = field === 'photos' ? [...activeProfile.photos,{photoId,url}] : url;
+                updateProfile(field,value)
+                showToast("You "+field+" Has Been Successfully added!")
+            })
+        })
+    }
+    const getUserProfile = (navigation,projectId) => {
+        const projectProfile = clients?.filter(client => client.projectId === projectId);
+        if(projectProfile.length > 0){
+            setActiveProfile(projectProfile[0]);
+            navigation.navigate("Profile")
+        }
+    }
+    const updateProfile = (field,value) => {
+        setActiveProfile(prevState => ({...prevState,[field]:value}))
+        updateData("projects",activeProfile.projectId,{[field]:value});
+    }
+    const sendSms = (phoneNo,msg) =>{
+        var request = new XMLHttpRequest();
+        request.open('POST', 'https://rest.clicksend.com/v3/sms/send');
+        request.setRequestHeader('Content-Type', 'application/json');
+        request.setRequestHeader('Authorization', 'Basic '+secrets.SMS_KEY);
+        request.onreadystatechange = function (response) {
+            showToast("message sent to "+phoneNo)
+        };
+        var body = {
+            'messages': [
+            {
+                'source': 'javascript',
+                'from': "uberFlirt",
+                'body': msg,
+                'to': phoneNo,
+                'schedule': '',
+                'custom_string': ''
+            }
+            ]
+        };
+        request.send(JSON.stringify(body));
+    }
+    const goToWebView = (navigation,object) =>{
+        if (Platform.OS == 'android') {
+            return_url = encodeURIComponent('https://lifestyle.empiredigitals.org/');
+            cancel_url = encodeURIComponent('https://smartstore.empiredigitals.org/');
+        }else{
+            return_url = 'https://lifestyle.empiredigitals.org/';
+            cancel_url = 'https://smartstore.empiredigitals.org/';
+        }
+        let description = "";
+        if(object.type === "SUBSCRIBE"){
+            description = `Subscription of ${object.plan} for ZAR ${object.amount}`
+        }else if(object.type === "PURCHASE"){
+            description = `Purchase of signatures or AI docs generator for ZAR ${object.amount}`
+        }else{
+            description = `Supporting ${activeProfile.fname} with ZAR ${object.amount}`
+        }
+        const baseUrl = "https://www.payfast.co.za/eng/process?cmd=_paynow&receiver="+mechantId+"&item_name="+object.type+"&item_description="+description+"&amount="+object.amount+"&return_url="+return_url+"&cancel_url="+cancel_url+""
+        navigation.navigate("WebBrowser",{object,baseUrl});
+    }
+    const loadAIDocs = (navigation) =>{
+        const AI_DOC_PRICE = secrets.AI_DOC_PRICE;
+        setConfirmDialog({isVisible:true,text:`Purchase more AI document generator tokens.\nBuy more to get more discount\nAI Document generator tokens allows you to generate documents within 60 seconds`,okayBtn:'PURCHASE',severity:true,cancelBtn:'Cancel',response:(res) => { 
+            if(res){
+                setModalState({isVisible:true,attr:{headerText:'AI DOCUMENT GENERATION',field:'AI_DOC',isNumeric:true,hint:`Each AI document generator token cost ZAR ${parseFloat(AI_DOC_PRICE).toFixed(2)}.\nWe advice you to purchase more than one token to avoid frequent purchases!\n1. 1-49 tokens = -0%\n2. 50-99 tokens = -7%\n3. 100-749 = -15%\n4. +750 tokens = 25%`,placeholder:'Enter Quantity...',handleChange:(field,quantity) => {
+                    if(quantity > 0){
+                        let amount = quantity * secrets.AI_DOC_PRICE;
+                        if(quantity > 49 && quantity < 100){
+                            amount = amount - (7 / 100) * amount;
+                        }else if(quantity > 99 && quantity < 749){
+                            amount = amount - (15 / 100) * amount;
+                        }else if(quantity > 749){
+                            amount = amount - (25 / 100) * amount;
+                        }
+                        const object = {type:"PURCHASE",plan:accountInfo.plan,amount,documents:parseFloat(quantity) + parseFloat(accountInfo.documents),signatures:parseFloat(accountInfo.signatures),projectId:null}
+                        goToWebView(navigation,object);
+                    }else{
+                        showToast("Value can not be 0")
+                    }
+                }}})
+            }
+        }})
+    }
+    const loadSignatures = (navigation) =>{
+        const SIGNATURE_PRICE = secrets.SIGNATURE_PRICE;
+        setConfirmDialog({isVisible:true,text:`Purchase more AI document generator tokens.\nBuy more to get more discount\nAI Document generator tokens allows you to generate documents within 60 seconds`,okayBtn:'PURCHASE',severity:true,cancelBtn:'Cancel',response:(res) => { 
+            if(res){
+                setModalState({isVisible:true,attr:{headerText:'BIO-METRIC SIGNATURE',field:'AI_DOC',isNumeric:true,hint:`Each bio-metric signature cost ZAR ${parseFloat(SIGNATURE_PRICE).toFixed(2)}.\nWe advice you to purchase more than one token to avoid frequent purchases!\n1. 1-49 signatures = -0%\n2. 50-99 signatures = -7%\n3. 100-749 = -15%\n4. +750 signatures = 25%`,placeholder:'Enter Quantity...',handleChange:(field,quantity) => {
+                    if(quantity > 0){
+                        let amount = quantity * secrets.SIGNATURE_PRICE;
+                        if(quantity > 49 && quantity < 100){
+                            amount = amount - (7 / 100) * amount;
+                        }else if(quantity > 99 && quantity < 749){
+                            amount = amount - (15 / 100) * amount;
+                        }else if(quantity > 749){
+                            amount = amount - (25 / 100) * amount;
+                        }
+                        const object = {type:"PURCHASE",plan:accountInfo.plan,amount,documents:parseFloat(accountInfo.documents),signatures:parseFloat(quantity) + parseFloat(accountInfo.signatures),projectId:null}
+                        goToWebView(navigation,object);
+                    }else{
+                        showToast("Value can not be 0")
+                    }
+                }}})
+            }
+        }})
+    }
+    const appState = {
+        accountInfo,plans,myProjects,setPlans,goToWebView,loadAIDocs,loadSignatures,secrets,categories,selectedCategory,industry,setIndustry,setCategories,updateProfile,handleUploadPhotos,handleFileUpload,clients,setClients,getUserProfile,activeProfile,setActiveProfile,documentTypes,setDocumentTypes,documents,setDocuments,pickCurrentLocation,nativeLink,setAccountInfo,saveUser,logout,fontFamilyObj,setModalState,setConfirmDialog,getLocation,sendPushNotification,showToast,takePicture,pickImage,sendSms,phoneNoValidation,countryData,setCountryData
+    }
     return(
         <AppContext.Provider value={{appState}}>
             {fontFamilyObj && props.children} 
@@ -128,8 +308,8 @@ export const AppProvider = (props) =>{
     )
 }
 const getCurrentLocation = (cb) =>{
-    const latitude= -26.2163;
-    const longitude=28.0369;
+    const latitude = -26.2163;
+    const longitude = 28.0369;
     if(askPermissionsAsync()){
         Location.installWebGeolocationPolyfill()
         navigator.geolocation.getCurrentPosition(position => {
@@ -214,28 +394,6 @@ const pickImage = async (type,cb) => {
         showToast(error)
     }
 };
-const sendSms = (phoneNo,msg) =>{
-    var request = new XMLHttpRequest();
-    request.open('POST', 'https://rest.clicksend.com/v3/sms/send');
-    request.setRequestHeader('Content-Type', 'application/json');
-    request.setRequestHeader('Authorization', 'Basic aW5mb0BlbXBpcmVkaWdpdGFscy5vcmc6ZW1waXJlRGlnaXRhbHMxIUA=');
-    request.onreadystatechange = function (response) {
-        showToast("message sent to "+phoneNo)
-    };
-    var body = {
-        'messages': [
-        {
-            'source': 'javascript',
-            'from': "uberFlirt",
-            'body': msg,
-            'to': phoneNo,
-            'schedule': '',
-            'custom_string': ''
-        }
-        ]
-    };
-    request.send(JSON.stringify(body));
-}
 const phoneNoValidation = (phone,countryCode) =>{
     countryCode = countryCode.slice(1,countryCode.length);
     let phoneNumber = phone.replace(/ /g, '');
@@ -287,6 +445,9 @@ const nativeLink = (type,obj) => {
         }).catch(err => console.log(err));
     }else if(type === 'email'){
         Linking.openURL(`mailto:${obj.email}`)
+    }else if(type === 'url'){
+        Linking.openURL(obj.url)
+        
     }
 }
 const sendPushNotification = async (to,title,body,data)=> {
@@ -311,7 +472,4 @@ const sendPushNotification = async (to,title,body,data)=> {
             });
         } catch (error) {}
     }
-}
-const currencyConverter = () =>{
-
 }

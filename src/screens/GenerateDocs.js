@@ -1,23 +1,11 @@
-import { createStackNavigator } from '@react-navigation/stack';
-import React, {useRef,useContext, useState, useEffect } from "react";
-import { StyleSheet, View,Text, Image, TouchableOpacity, Dimensions} from "react-native";
-import {Feather, FontAwesome, MaterialIcons } from "@expo/vector-icons";
+import { createNativeStackNavigator as createStackNavigator } from '@react-navigation/native-stack';
+import React, {useContext, useState } from "react";
+import { StyleSheet, View,Text, TextInput, TouchableOpacity, Dimensions} from "react-native";
+import {Feather} from "@expo/vector-icons";
 import { AppContext } from '../context/AppContext';
-import { createData, updateData, uploadAsPDF, uploadFile } from '../context/Api';
-import Pdf from 'react-native-pdf';
-import { QRCode } from 'react-native-custom-qr-codes-expo';
-import ViewShot from "react-native-view-shot";
-import {captureRef} from "react-native-view-shot";
 import { Configuration, OpenAIApi } from 'openai';
-import { ScrollView } from 'react-native-gesture-handler';
-import Textarea from 'react-native-textarea';
 const RootStack = createStackNavigator();
 let object;
-const { width, height } = Dimensions.get('window');
-const configuration = new Configuration({
-    apiKey: "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",
-});
-const openai = new OpenAIApi(configuration);
 const GenerateDocs = ({navigation,route}) => {
     const {appState:{fontFamilyObj}} = useContext(AppContext);
     object = route.params;
@@ -47,15 +35,15 @@ const PageContent = ({navigation}) =>{
     const onChange = (value) => setSummary(value)
     return(
         <View style={styles.container}>
-            <Text style={{fontFamily:fontBold,marginBottom:15,color:'orange'}}>{hint}</Text>
-            <Textarea
-                containerStyle={styles.textareaContainer}
-                style={[styles.textarea,{fontFamily:fontBold}]}
+            <Text style={{fontFamily:fontBold,marginBottom:15,color:'orange',alignSelf:'flex-start'}}>{hint}</Text>
+            <TextInput 
+                numberOfLines={10} 
+                editable={true} 
+                multiline maxLength={300} 
                 onChangeText={onChange}
-                maxLength={1500}
-                placeholder={'Give Us Enough Information About Your '+type+' document'}
-                placeholderTextColor={'#14678B'}
                 underlineColorAndroid={'transparent'}
+                placeholder={'Give Us Enough Information About Your '+type+' document'}
+                style={{width:'100%',fontFamily:fontLight,padding: 10,backgroundColor: '#F5FCFF',borderRadius:5,borderWidth:1,borderColor:'#14678B'}} 
             />
             <TouchableOpacity onPress={() => {
                 navigation.navigate("Results",{item:{...item,summary}})

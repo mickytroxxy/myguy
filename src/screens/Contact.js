@@ -1,9 +1,9 @@
-import { createStackNavigator } from '@react-navigation/stack';
+import { createNativeStackNavigator as createStackNavigator } from '@react-navigation/native-stack';
 import React, {useState,useContext, useEffect } from "react";
 import { StyleSheet, View,Text, TouchableOpacity, Linking} from "react-native";
 import {Feather, FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { AppContext } from '../context/AppContext';
-import { createData, getContact } from '../context/Api';
+import { getContact } from '../context/Api';
 const RootStack = createStackNavigator();
 const Contact = ({navigation,route}) =>{
     const {appState:{fontFamilyObj}} = useContext(AppContext);

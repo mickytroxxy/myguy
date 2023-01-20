@@ -1,27 +1,33 @@
-import { createStackNavigator } from '@react-navigation/stack';
+import { createNativeStackNavigator as createStackNavigator } from '@react-navigation/native-stack';
 import React, {useRef,useContext, useState } from "react";
-import { StyleSheet,ScrollView, View,Text, Image, TouchableOpacity, Dimensions} from "react-native";
+import { Platform,Share, View,Text, Image, TouchableOpacity, Dimensions} from "react-native";
 import {Feather, FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { AppContext } from '../context/AppContext';
-import { createData, updateData, uploadAsPDF, uploadFile } from '../context/Api';
+import { createData, signPDF, updateData, uploadFile } from '../context/Api';
 import Pdf from 'react-native-pdf';
-import { QRCode } from 'react-native-custom-qr-codes-expo';
-import ViewShot from "react-native-view-shot";
-import {captureRef} from "react-native-view-shot";
-import {printToFileAsync} from 'expo-print';
-import { shareAsync } from 'expo-sharing';
-import { WebView } from 'react-native-webview';
+import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system';  
 const RootStack = createStackNavigator();
 let object;
 const { width, height } = Dimensions.get('window');
 const DocumentView = ({navigation,route}) => {
-    const {appState:{fontFamilyObj}} = useContext(AppContext);
+    const {appState:{fontFamilyObj,documents}} = useContext(AppContext);
     object = route.params;
+    const {url,documentId} = object;
+    const documentInfo = documents.filter(doc => doc.documentId === documentId)[0]
     return(
         <RootStack.Navigator screenOptions={{headerStyle: {elevation: 1,shadowOpacity: 0,backgroundColor: "#fff",borderBottomWidth: 0},headerTintColor: "#fff",headerTitleStyle: { fontWeight: "bold" }}}>
         <RootStack.Screen name="AddItemScreen" component={PageContent} options={{
             headerLeft: () => (
                 <Feather.Button backgroundColor="#fff" name="arrow-left-circle" size={28} color="#757575" onPress={()=>{navigation.goBack()}}></Feather.Button>
+            ),
+            headerRight: () => (
+                <View>
+                    <Feather.Button backgroundColor="#fff" name="user" size={28} color="#757575" onPress={()=>{navigation.navigate("Participants",{signies:documentInfo?.signies})}}></Feather.Button>
+                    <View style={{position:'absolute',right:5}}>
+                        <Text style={{fontFamily:fontFamilyObj.fontBold,fontSize:13,color:'tomato'}}>{documentInfo?.signies?.length}</Text>
+                    </View>
+                </View>
             ), 
             title: object.documentType,
             headerTintColor: '#757575',
@@ -35,10 +41,9 @@ const DocumentView = ({navigation,route}) => {
     )
 };
 const PageContent = ({navigation}) =>{
-    const {appState:{showToast,setConfirmDialog,setModalState,accountInfo,fontFamilyObj:{fontBold,fontLight},documents,setDocuments} } = useContext(AppContext);
+    const {appState:{showToast,loadSignatures,setConfirmDialog,setModalState,secrets,accountInfo,setAccountInfo,fontFamilyObj:{fontBold,fontLight},documents,setDocuments} } = useContext(AppContext);
     const {url,documentId} = object;
-    const [downloadedPDF,setDownloadedPDF] = useState(null)
-    const viewRef = useRef();
+    const [isSigned,setIsSigned] = useState(false);
     const documentInfo = documents.filter(doc => doc.documentId === documentId)[0]
     const selfieResponse = (url) => {
         const time = Date.now();
@@ -48,75 +53,83 @@ const PageContent = ({navigation}) =>{
             if(createData("signatures",signatureId,obj)){
                 updateData("documents",documentId,{signies:[...documentInfo.signies,{signatureId,signie:accountInfo.id}]})
                 setDocuments(documents.map(doc => doc.documentId === documentId ? {...doc,signies:[...doc.signies,{signatureId,signie:accountInfo.id}]} : doc))
-                showToast("All done, you have signed this document!")
+                setIsSigned(true);
+                if(documentInfo.documentOwner === accountInfo.id){
+                    const signatures = accountInfo.signatures - 1;
+                    updateData("clients",accountInfo.id,{signatures})
+                    setAccountInfo(prevState => ({...prevState,signatures}))
+                }
             }
         })
     }
     const signBtn = () => {
-        if(documentInfo?.signies?.filter(item => item.signie === accountInfo.id).length > 0){
-            showToast("You have signed this document already")
+        if(accountInfo){
+            if(documentInfo?.signies?.filter(item => item.signie === accountInfo.id).length > 0){
+                showToast("You have signed this document already")
+            }else{
+                if((accountInfo.signatures > 0 && documentInfo.documentOwner === accountInfo.id) || (documentInfo.documentOwner !== accountInfo.id))
+                    setConfirmDialog({isVisible:true,text:`By signing this document, you confirm that you agree with whatever written on this document is true. By continuing your selfie photo will be required to confirm.`,okayBtn:'SIGN',cancelBtn:'Cancel',severity:true,response:(res) => { 
+                        if(res){
+                            signPDF(documentId,secrets.BASE_URL,()=>{
+                                navigation.navigate("CameraScreen",selfieResponse);
+                            })
+                        }
+                    }})
+                else
+                    loadSignatures(navigation);
+            }
         }else{
-            setConfirmDialog({isVisible:true,text:`By signing this document, you confirm that you agree with whatever written on this document is true. By continuing your selfie photo will be required to confirm.`,okayBtn:'SIGN',cancelBtn:'Cancel',severity:true,response:(res) => { 
-                if(res){
-                    navigation.navigate("CameraScreen",selfieResponse)
-                }
-            }})
+            navigation.navigate("Register")
         }
     }
-    const download = () => {
-        captureRef(viewRef, {
-            format: "jpg",
-            quality: 1,
-          }).then((QRCode) => {
-            setModalState({isVisible:true,attr:{headerText:'DOWNLOAD FILE',QRCode,pdfUrl:url}})
-          },(error) => console.error("Oops, snapshot failed", error)
-        );
+    const shareFile = async(uri) => {
+        await Sharing.shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf' });
     }
-    let generatePDF = async (url) => {
-        const html = `
-            <html>
-                <head>
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
-                </head>
-                <body style="text-align: center;">
-                    <img src=${url} style="width: 100%;" />
-                </body>
-            </html>
-        `;
-        const file = await printToFileAsync({
-            html:html,base64:false
-        })
-        await shareAsync(file.uri)
+    const downloadFile = async (url) =>{ 
+        let pathNoAtt = url.split("?")
+        let pathWithCompany = pathNoAtt[0].split('/');
+        let path = pathWithCompany[pathWithCompany.length-1];
+        const file_name = path
+        FileSystem.downloadAsync(url, FileSystem.documentDirectory + file_name).then(async ({ uri }) => {
+            console.log('Finished downloading to ', uri);
+            shareFile(uri)
+            
+        }).catch(error => {
+            console.error(error);
+        });
     }
     return(
         <View style={{flex:1,backgroundColor:'#fff'}}>
-            <ScrollView showsVerticalScrollIndicator={false} style={{flex:1}}>
-                <ViewShot ref={viewRef} style={{flex:1}}>
+            {!isSigned && 
+                <View style={{flex:1}}>
                     <Pdf
                         source={{ uri: url, cache: true }}
                         style={{width:width,height:height,flex:1,backgroundColor:'#fff'}}
                         enableAntialiasing={true}
                         fitWidth={true}
                     />
-                    {/**<View style={{position:'absolute',bottom:360,right:5,backgroundColor:'#fff',padding:5,zIndex:100}}>
-                    <QRCode outerEyeStyle='diamond' content={documentId} size={120}/>
-                </View> */}
-                </ViewShot>
-            </ScrollView>
-            <View style={{position:'absolute',flexDirection:'row',backgroundColor:'rgba(0, 0, 0, 0.5)',bottom:0,left:0,width:'100%',zIndex:100,padding:20,justifyContent:'center'}}>
-                <TouchableOpacity onPress={() => signBtn()} style={{padding:10,flexDirection:'row',borderRadius:10,borderWidth:1,borderColor:'#fff',margin:5}}>
-                    <MaterialIcons name='qr-code-scanner' color={"#fff"} size={20}/>
-                    <Text style={{color:'#fff',marginTop:1,fontFamily:fontBold}}>Sign</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={{padding:10,flexDirection:'row',borderRadius:10,borderWidth:1,borderColor:'#fff',margin:5}}>
-                    <MaterialIcons name='share' color={"#fff"} size={20}/>
-                    <Text style={{color:'#fff',marginTop:1,fontFamily:fontBold}}>Share</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => download()} style={{padding:10,flexDirection:'row',borderRadius:10,borderWidth:1,borderColor:'#fff',margin:5}}>
-                    <MaterialIcons name='cloud-download' color={"#fff"} size={20}/>
-                    <Text style={{color:'#fff',marginTop:1,fontFamily:fontBold}}>Download</Text>
-                </TouchableOpacity>
-            </View>
+                    <View style={{position:'absolute',flexDirection:'row',backgroundColor:'rgba(0, 0, 0, 0.5)',bottom:0,left:0,width:'100%',zIndex:100,padding:20,justifyContent:'center'}}>
+                        <TouchableOpacity onPress={() => signBtn()} style={{padding:10,flexDirection:'row',borderRadius:10,borderWidth:1,borderColor:'#fff',margin:5}}>
+                            <MaterialIcons name='qr-code-scanner' color={"#fff"} size={20}/>
+                            <Text style={{color:'#fff',marginTop:1,fontFamily:fontBold}}>Sign Document</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => downloadFile(url)} style={{padding:10,flexDirection:'row',borderRadius:10,borderWidth:1,borderColor:'#fff',margin:5}}>
+                            <MaterialIcons name='share' color={"#fff"} size={20}/>
+                            <Text style={{color:'#fff',marginTop:1,fontFamily:fontBold}}>Share Document</Text>
+                        </TouchableOpacity>
+                        {/* <TouchableOpacity onPress={() => shareFile()} style={{padding:10,flexDirection:'row',borderRadius:10,borderWidth:1,borderColor:'#fff',margin:5}}>
+                            <MaterialIcons name='cloud-download' color={"#fff"} size={20}/>
+                            <Text style={{color:'#fff',marginTop:1,fontFamily:fontBold}}>Download</Text>
+                        </TouchableOpacity> */}
+                    </View>
+                </View>
+            }
+            {isSigned && 
+                <View style={{justifyContent:'center',alignItems:'center',flex:1}}>
+                    <FontAwesome name="check-circle" color="green" size={200}></FontAwesome>
+                    <Text style={{color:'#2a2828',fontFamily:fontBold,padding:10,textAlign:'center'}}>All Done You Have Signed This Document!</Text>
+                </View>
+            }
         </View>
     )
 };

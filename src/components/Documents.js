@@ -1,57 +1,43 @@
-import PropTypes from 'prop-types'
 import React, { memo,useContext,useEffect,useState } from 'react'
 import { View,TouchableOpacity,Text, ScrollView, Image, Platform } from 'react-native'
 import { AppContext } from '../context/AppContext'
 import * as Animatable from 'react-native-animatable';
 import { ActivityIndicator } from 'react-native-paper';
-import { MaterialCommunityIcons, FontAwesome, MaterialIcons} from "@expo/vector-icons";
-import { createData, getDocuments } from '../context/Api';
+import { MaterialCommunityIcons, FontAwesome, MaterialIcons, Ionicons} from "@expo/vector-icons";
+import { getDocuments } from '../context/Api';
 import Pdf from 'react-native-pdf';
+import Banner from './Banner';
 const Products = memo(({navigation}) => {
     const {appState:{
         fontFamilyObj:{fontBold,fontLight},
-        accountInfo,
-        documentTypes,documents,setDocuments
+        documents,secrets
     }} = useContext(AppContext);
-    useEffect(() => {
-        if(accountInfo){
-            getDocuments(accountInfo.id,(response) => setDocuments(response))
-        }
-    },[])
+
     return (
         <View>
-            <Animatable.View animation="slideInLeft" duration={750} useNativeDriver={true} style={{flexDirection:'row',marginTop:10,borderBottomWidth:0.6,borderBottomColor:'#fff',paddingBottom:15}}>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {[{type:'ALL',selected:true},...documentTypes].map((item,i) => {
-                    return(
-                        <View key={i} style={{flex:1}}>
-                            <TouchableOpacity style={{borderWidth:1,borderColor:'#5586cc',flex:1,margin:5,padding:10,borderRadius:30}} onPress={() => {
-                                alert("hey")
-                            }}>
-                                <Text style={{fontFamily:fontBold,color:'#757575',textAlign:'center',fontSize:Platform.OS === 'android' ? 11 : 12}}>{item.type}</Text>
-                            </TouchableOpacity>
-                        </View>
-                    )
-                })}
-                </ScrollView>
-            </Animatable.View>
-
             <ScrollView showsVerticalScrollIndicator={false} style={{marginTop:15}}>
+                <TouchableOpacity onPress={() => navigation.navigate("AddDocument")} style={{borderRadius:10,padding:10,borderColor:'green',borderWidth:1,flexDirection:'row',width:'100%',alignSelf:'center'}}>
+                    <MaterialIcons name='add-circle' size={24} color="green" />
+                    <View style={{marginLeft:10,justifyContent:'center'}}>
+                        <Text style={{fontFamily:fontBold,color:'green',fontSize:11}}>ADD DOCUMENT</Text>
+                    </View>
+                </TouchableOpacity>
                 <Animatable.View animation="slideInRight" duration={750} useNativeDriver={true} style={{flexDirection:'row',alignContent:'center',alignItems:'center',display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',flexWrap: 'wrap'}}>
-                    {documents?.length > 0 && documents?.map((item,i)=>{
+                    {documents?.length > 0 && documents.sort((a,b)=>b.time - a.time)?.map((item,i)=>{
                         const {documentType,documentId,url} = item;
+                        const link = `${secrets.BASE_URL}${url}`
                         return(
-                            <TouchableOpacity onPress={() => navigation.navigate("DocumentView",{documentType,documentId,url})} key={i} style={{width:'48%',borderRadius:10,alignContent:'center',alignItems:'center',justifyContent:'center',minHeight:220,marginTop:10}}>
-                                <View style={{width:'100%',height:220,backgroundColor:'#fff',borderRadius:10,padding:2,alignContent:'center',justifyContent:'center',alignItems:'center'}}>
+                            <TouchableOpacity onPress={() => navigation.navigate("DocumentView",{documentType,documentId,url:link})} key={i} style={{width:'48%',borderRadius:10,alignContent:'center',alignItems:'center',justifyContent:'center',minHeight:220,marginTop:10}}>
+                                <View style={{width:'100%',height:220,backgroundColor:'#F4B55A',borderRadius:10,padding:1,alignContent:'center',justifyContent:'center',alignItems:'center'}}>
                                     <Pdf
-                                        source={{ uri: url, cache: true }}
+                                        source={{ uri: link, cache: true }}
+                                        trustAllCerts={false}
                                         style={{width:'100%',height:'100%',borderRadius:10}}
                                         enableAntialiasing={true}
                                         fitWidth={true}
-                                        singlePage ={1}
                                     />
                                 </View>
-                                <View style={{backgroundColor:'rgba(0, 0, 0, 0.2)',borderRadius:0,justifyContent:'center',borderBottomRightRadius:50,borderTopLeftRadius:50,padding:10,width:'100%',marginTop:5}}><Text style={{fontFamily:fontBold,color:'#14678B',textAlign:'center',fontSize:11}} numberOfLines={1}>{documentType}</Text></View>
+                                <View style={{backgroundColor:'rgba(0, 0, 0, 0.2)',borderRadius:0,justifyContent:'center',borderBottomRightRadius:50,borderTopLeftRadius:50,padding:10,width:'100%',marginTop:5}}><Text style={{fontFamily:fontBold,color:'#14678B',textAlign:'center',fontSize:9}} numberOfLines={1}>{documentType}</Text></View>
                             </TouchableOpacity>
                         )
                     })}
@@ -68,10 +54,11 @@ const Products = memo(({navigation}) => {
                         </View>
                     )}
                 </Animatable.View>
+                <Banner navigation={navigation}/>
                 <View style={{marginTop:30,alignContent:'center',alignItems:'center'}}>
                     <Text style={{textAlign:'center',fontFamily:fontBold}}>Contact Support</Text>
                     <TouchableOpacity onPress={()=> navigation.navigate("Contact")}>
-                        <MaterialIcons name='contact-support' size={75} color="#5586cc" />
+                        <MaterialIcons name='contact-support' size={75} color="green" />
                     </TouchableOpacity>
                 </View>
             </ScrollView>
