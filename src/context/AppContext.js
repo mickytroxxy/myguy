@@ -32,7 +32,7 @@ export const AppProvider = (props) =>{
     const [confirmDialog,setConfirmDialog] = useState({isVisible:false,text:'Would you like to come today for a fist?',okayBtn:'VERIFY',cancelBtn:'CANCEL',isSuccess:false})
     const [currentLocation,setCurrentLocation] = useState(null);
     const [countryData,setCountryData] = useState({dialCode:'+27',name:'South Africa',flag:'https://cdn.kcak11.com/CountryFlags/countries/za.svg'})
-    const [secrets,setSecrets] = useState({BASE_URL:"https://myguy-server-production.up.railway.app",OPENAI_KEY:"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",AI_DOC_PRICE:15,SIGNATURE_PRICE:50,SMS_KEY:"aW5mb0BlbXBpcmVkaWdpdGFscy5vcmc6ZW1waXJlRGlnaXRhbHMxIUA="});
+    const [secrets,setSecrets] = useState({BASE_URL:"https://myguy-server-production.up.railway.app",OPENAI_KEY:"",AI_DOC_PRICE:15,SIGNATURE_PRICE:50,SMS_KEY:"aW5mb0BlbXBpcmVkaWdpdGFscy5vcmc6ZW1waXJlRGlnaXRhbHMxIUA="});
     const [clients,setClients] = useState(null);
     const [activeProfile,setActiveProfile] = useState(null);
     const [myProjects,setMyProjects] = useState(null);
