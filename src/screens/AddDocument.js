@@ -6,9 +6,10 @@ import { AntDesign } from "@expo/vector-icons";
 import { AppContext } from '../context/AppContext';
 import Banner from '../components/Banner';
 import BackBtn from '../components/BackBtn';
+import { getDocumentsById, getUserDetails } from '../context/Api';
 const AddDocument = memo(({navigation}) => {
     const {appState:{
-        fontFamilyObj:{fontBold,fontLight},setModalState,loadAIDocs,showToast,secrets,handleFileUpload,accountInfo,documentTypes,setConfirmDialog
+        fontFamilyObj:{fontBold,fontLight},setModalState,loadAIDocs,showToast,sendPushNotification,handleFileUpload,accountInfo,documentTypes,setConfirmDialog
     }} = useContext(AppContext);
     
     const [selectedDocument,setSelectedDocument] = useState(null);
@@ -17,9 +18,23 @@ const AddDocument = memo(({navigation}) => {
         const result = await DocumentPicker.getDocumentAsync({type:'application/pdf'})
         if (result.type === 'success') {
             if(document === "ID DOCUMENT"){
-                setModalState({isVisible:true,attr:{headerText:'ID | PASSPORT NUMBER',field:'AI_DOC',isNumeric:true,hint:`Enter Your Real ID Or Passport Number associated with the document you are about to upload!`,placeholder:'Enter ID Number Or Passport Number...',handleChange:(field,idNo) => {
+                setModalState({isVisible:true,attr:{headerText:'ID | PASSPORT NUMBER',field:'AI_DOC',hint:`Enter Your Real ID Or Passport Number associated with the document you are about to upload!`,placeholder:'Enter ID Number Or Passport Number...',handleChange:(field,idNo) => {
                     if(idNo.length > 6){
-                        handleFileUpload(document,result.uri,navigation,idNo.toString());
+                        getDocumentsById(idNo.toString().toUpperCase(),(response) => {
+                            if(response.length === 0){
+                                handleFileUpload(document,result.uri,navigation,idNo.toString().toUpperCase());
+                            }else{
+                                const {documentOwner} = response[0];
+                                getUserDetails(documentOwner,(accountOwner) => {
+                                    if(accountOwner.length > 0){
+                                        if(accountOwner[0]?.notificationToken){
+                                            sendPushNotification(accountOwner[0]?.notificationToken,"SUSPICIOUS ACTIVITY ON YOUR ID",`Hello ${accountOwner[0].fname}, Someone just tried to use your ID on our platform. If its you please contact us to resolve this!`,{});
+                                        }
+                                    }
+                                })
+                                showToast("The entered ID number is taken. For any query please contact us");
+                            }
+                        })
                     }else{
                         showToast("Invalid ID | Passport Number")
                     }

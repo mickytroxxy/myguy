@@ -1,4 +1,4 @@
-import React,{useState,useMemo, useEffect} from 'react';
+import React,{useState,useMemo, useEffect, useRef} from 'react';
 export const AppContext = React.createContext();
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import geohash from "ngeohash";
@@ -11,9 +11,20 @@ import * as Permissions from 'expo-permissions';
 import * as ImagePicker from 'expo-image-picker';
 import { createData, getAllProjects, getDataList, getDocuments, getMyProjects, getSecrets, getUserDetails, updateData, uploadFile, uploadPDF } from './Api';
 import axios from 'axios';
+import Constants from 'expo-constants';
+import * as Notifications from 'expo-notifications';
 import { users } from './users';
+
 let return_url,cancel_url;
 const mechantId = 15759218;
+Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+    }),
+});
+let lastNotificationResponse;
 export const AppProvider = (props) =>{
     const [fontFamilyObj,setFontFamilyObj] = useState(null);
     const [accountInfo,setAccountInfo] = useState(null);
@@ -21,7 +32,7 @@ export const AppProvider = (props) =>{
     const [confirmDialog,setConfirmDialog] = useState({isVisible:false,text:'Would you like to come today for a fist?',okayBtn:'VERIFY',cancelBtn:'CANCEL',isSuccess:false})
     const [currentLocation,setCurrentLocation] = useState(null);
     const [countryData,setCountryData] = useState({dialCode:'+27',name:'South Africa',flag:'https://cdn.kcak11.com/CountryFlags/countries/za.svg'})
-    const [secrets,setSecrets] = useState({BASE_URL:"https://myguy-server-production.up.railway.app",OPENAI_KEY:"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",AI_DOC_PRICE:15,SIGNATURE_PRICE:50,SMS_KEY:"aW5mb0BlbXBpcmVkaWdpdGFscy5vcmc6ZW1waXJlRGlnaXRhbHMxIUA="});
+    const [secrets,setSecrets] = useState({BASE_URL:"https://myguy-server-production.up.railway.app",OPENAI_KEY:"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",AI_DOC_PRICE:15,SIGNATURE_PRICE:50,SMS_KEY:"aW5mb0BlbXBpcmVkaWdpdGFscy5vcmc6ZW1waXJlRGlnaXRhbHMxIUA="});
     const [clients,setClients] = useState(null);
     const [activeProfile,setActiveProfile] = useState(null);
     const [myProjects,setMyProjects] = useState(null);
@@ -125,11 +136,18 @@ export const AppProvider = (props) =>{
         }
         getUser();
     },[])
+    const notificationListener = useRef();
+    const responseListener = useRef();
     useEffect(() => {
         if(accountInfo){
             getDocuments(accountInfo.id,(response) => {
                 setDocuments(response)
-            })
+            });
+            registerForPushNotificationsAsync(accountInfo);
+            return () => {
+                Notifications.removeNotificationSubscription(notificationListener);
+                Notifications.removeNotificationSubscription(responseListener);
+            };
         }
     },[accountInfo])
     const saveUser = async user =>{
@@ -472,4 +490,36 @@ const sendPushNotification = async (to,title,body,data)=> {
             });
         } catch (error) {}
     }
+}
+const registerForPushNotificationsAsync = async(accountInfo)=> {
+    let token;
+    if (Constants.isDevice) {
+        const { status: existingStatus } = await Notifications.getPermissionsAsync();
+        let finalStatus = existingStatus;
+        if (existingStatus !== 'granted') {
+            const { status } = await Notifications.requestPermissionsAsync();
+            finalStatus = status;
+        }
+        if (finalStatus !== 'granted') {
+            return;
+        }
+        await Notifications.getExpoPushTokenAsync().then((res) => {
+            const notificationToken = res.data;
+            if(accountInfo){
+                updateData("clients",accountInfo.id,{notificationToken})
+            }
+        })
+    } else {
+      showToast('Must use physical device for Push Notifications');
+    }
+  
+    if (Platform.OS === 'android') {
+      Notifications.setNotificationChannelAsync('default', {
+        name: 'default',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#FF231F7C',
+      });
+    }
+    return token;
 }

@@ -3,7 +3,7 @@ import React, {useRef,useContext, useState } from "react";
 import { Platform,Share, View,Text, Image, TouchableOpacity, Dimensions} from "react-native";
 import {Feather, FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { AppContext } from '../context/AppContext';
-import { createData, signPDF, updateData, uploadFile } from '../context/Api';
+import { createData, getUserDetails, signPDF, updateData, uploadFile } from '../context/Api';
 import Pdf from 'react-native-pdf';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';  
@@ -11,7 +11,7 @@ const RootStack = createStackNavigator();
 let object;
 const { width, height } = Dimensions.get('window');
 const DocumentView = ({navigation,route}) => {
-    const {appState:{fontFamilyObj,documents}} = useContext(AppContext);
+    const {appState:{fontFamilyObj,documents,showToast}} = useContext(AppContext);
     object = route.params;
     const {url,documentId} = object;
     const documentInfo = documents.filter(doc => doc.documentId === documentId)[0]
@@ -23,7 +23,13 @@ const DocumentView = ({navigation,route}) => {
             ),
             headerRight: () => (
                 <View>
-                    <Feather.Button backgroundColor="#fff" name="user" size={28} color="#757575" onPress={()=>{navigation.navigate("Participants",{signies:documentInfo?.signies})}}></Feather.Button>
+                    <Feather.Button backgroundColor="#fff" name="user" size={28} color="#757575" onPress={()=>{
+                        if(documentInfo?.signies?.length > 0){
+                            navigation.navigate("Participants",{signies:documentInfo?.signies})
+                        }else{
+                            showToast("No signees found!")
+                        }
+                    }}></Feather.Button>
                     <View style={{position:'absolute',right:5}}>
                         <Text style={{fontFamily:fontFamilyObj.fontBold,fontSize:13,color:'tomato'}}>{documentInfo?.signies?.length}</Text>
                     </View>
@@ -41,7 +47,7 @@ const DocumentView = ({navigation,route}) => {
     )
 };
 const PageContent = ({navigation}) =>{
-    const {appState:{showToast,loadSignatures,setConfirmDialog,setModalState,secrets,accountInfo,setAccountInfo,fontFamilyObj:{fontBold,fontLight},documents,setDocuments} } = useContext(AppContext);
+    const {appState:{showToast,loadSignatures,setConfirmDialog,setModalState,sendPushNotification,secrets,accountInfo,setAccountInfo,fontFamilyObj:{fontBold,fontLight},documents,setDocuments} } = useContext(AppContext);
     const {url,documentId} = object;
     const [isSigned,setIsSigned] = useState(false);
     const documentInfo = documents.filter(doc => doc.documentId === documentId)[0]
@@ -59,12 +65,19 @@ const PageContent = ({navigation}) =>{
                     updateData("clients",accountInfo.id,{signatures})
                     setAccountInfo(prevState => ({...prevState,signatures}))
                 }
+                getUserDetails(documentInfo.documentOwner,(accountOwner) => {
+                    if(accountOwner.length > 0){
+                        if(accountOwner[0]?.notificationToken){
+                            sendPushNotification(accountOwner[0]?.notificationToken,"DOCUMENT SIGNED",`Hello ${accountOwner[0].fname}, Your ${documentInfo.documentType} has been signed by ${accountInfo.fname}`,{});
+                        }
+                    }
+                })
             }
         })
     }
     const signBtn = () => {
         if(accountInfo){
-            if(documentInfo?.signies?.filter(item => item.signie === accountInfo.id).length > 0){
+            if((documentInfo?.signies?.filter(item => item.signie === accountInfo.id).length > 0) && (documentInfo.documentType !== "ID DOCUMENT")){
                 showToast("You have signed this document already")
             }else{
                 if((accountInfo.signatures > 0 && documentInfo.documentOwner === accountInfo.id) || (documentInfo.documentOwner !== accountInfo.id))

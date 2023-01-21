@@ -3,9 +3,9 @@ import { View,Text,StyleSheet,TouchableOpacity,ActivityIndicator } from "react-n
 import { WebView } from 'react-native-webview';
 import FontAwesome from "react-native-vector-icons/FontAwesome";
 import { AppContext } from "../context/AppContext";
-import { createData, updateData } from "../context/Api";
+import { createData, getUserDetails, updateData } from "../context/Api";
 const WebBrowser = ({route,navigation}) =>{
-    const { appState:{fontFamilyObj,accountInfo,clients,setActiveProfile,setAccountInfo,activeProfile} } = React.useContext(AppContext);
+    const { appState:{fontFamilyObj,accountInfo,clients,setActiveProfile,setAccountInfo,activeProfile,sendPushNotification} } = React.useContext(AppContext);
     const { object,baseUrl } = route.params;
     const [successStatus,setSuccessStatus]=useState('processing');
     React.useEffect(()=>{
@@ -86,7 +86,14 @@ const WebBrowser = ({route,navigation}) =>{
             const funded = parseFloat(activeProfile.funded) + parseFloat(amount);
             const funders = [...activeProfile.funders,funder]
             setActiveProfile(prevState => ({...prevState,funded,funders}));
-            updateData("projects",projectId,{funded,funders})
+            updateData("projects",projectId,{funded,funders});
+            getUserDetails(activeProfile.projectOwner,(accountOwner) => {
+                if(accountOwner.length > 0){
+                    if(accountOwner[0]?.notificationToken){
+                        sendPushNotification(accountOwner[0]?.notificationToken,"YOU GOT FUNDED",`Hello ${accountOwner[0].fname}, Someone just supported your project with ZAR ${amount}`,{});
+                    }
+                }
+            })
         }
         setSuccessStatus("processed");
         return(

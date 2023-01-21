@@ -3,9 +3,10 @@ import { View, TouchableOpacity, Text, StyleSheet } from 'react-native'
 import { Ionicons,Feather, FontAwesome } from "@expo/vector-icons";
 import { ProgressBar } from 'react-native-paper';
 import { AppContext } from '../../../context/AppContext';
+import { getUserDetails } from '../../../context/Api';
 const Stats = memo((props) => {
     const {profileOwner,activeProfile,fontBold,fontLight,accountInfo} = props?.data;
-    const {appState:{updateProfile}} = useContext(AppContext)
+    const {appState:{updateProfile,sendPushNotification}} = useContext(AppContext)
     const {target,funded,votes,funders} = activeProfile;
     const percentage = (funded / target * 100).toFixed(0);
     const iVoted = votes.indexOf(accountInfo?.id);
@@ -14,7 +15,14 @@ const Stats = memo((props) => {
         if(accountInfo){
             let currentVoters = votes;
             if(votes.indexOf(accountInfo.id) === -1){
-                currentVoters = [...currentVoters,accountInfo.id]
+                currentVoters = [...currentVoters,accountInfo.id];
+                getUserDetails(activeProfile.projectOwner,(accountOwner) => {
+                    if(accountOwner.length > 0){
+                        if(accountOwner[0]?.notificationToken){
+                            sendPushNotification(accountOwner[0]?.notificationToken,"YOU HAVE A NEW VOTER",`Hello ${accountOwner[0].fname}, Your project just received a vote. Keep up the good work!`,{});
+                        }
+                    }
+                })
             }else{
                 votes.splice(votes.indexOf(accountInfo.id), 1)
             }

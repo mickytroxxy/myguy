@@ -6,6 +6,7 @@ import * as Animatable from 'react-native-animatable';
 import { getSignies } from '../context/Api';
 import Banner from '../components/Banner';
 import BackBtn from '../components/BackBtn';
+import moment from 'moment';
 const Participants = memo(({navigation,route}) => {
     const {signies} = route.params;
     const {appState:{
@@ -29,8 +30,9 @@ const Participants = memo(({navigation,route}) => {
                         const {fname,selfie} = item;
                         return(
                             <TouchableOpacity key={i} style={{width:'48%',borderRadius:10,alignContent:'center',alignItems:'center',justifyContent:'center',minHeight:220,marginTop:10}}>
-                                <View style={{width:'100%',height:220,backgroundColor:'#B9D9EB',borderRadius:10,padding:1,alignContent:'center',justifyContent:'center',alignItems:'center'}}>
-                                    <Image source={{uri:selfie}} style={{width:'100%',height:'100%'}} resizeMode="cover" />
+                                <View style={{width:'100%',height:220,backgroundColor:'#F4B55A',borderRadius:10,padding:2,alignContent:'center',justifyContent:'center',alignItems:'center'}}>
+                                    <Image source={{uri:selfie}} style={{width:'100%',height:'100%',borderRadius:10}} resizeMode="cover" />
+                                    <View style={{backgroundColor:'rgba(0, 0, 0, 0.5)',borderRadius:0,justifyContent:'center',borderBottomRightRadius:50,borderTopLeftRadius:50,padding:5,width:'90%',marginTop:5,position:'absolute',zIndex:1000,bottom:5}}><Text style={{fontFamily:fontBold,color:'#fff',textAlign:'center',fontSize:9}} numberOfLines={1}>{moment(item.time).format("YYYY-MM-DD HH:mm:ss")}</Text></View>
                                 </View>
                                 <View style={{backgroundColor:'rgba(0, 0, 0, 0.2)',borderRadius:0,justifyContent:'center',borderBottomRightRadius:50,borderTopLeftRadius:50,padding:10,width:'100%',marginTop:5}}><Text style={{fontFamily:fontBold,color:'#14678B',textAlign:'center',fontSize:9}} numberOfLines={1}>{fname}</Text></View>
                             </TouchableOpacity>
