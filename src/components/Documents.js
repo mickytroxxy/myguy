@@ -30,7 +30,7 @@ const Products = memo(({navigation}) => {
                             <TouchableOpacity onPress={() => navigation.navigate("DocumentView",{documentType,documentId,url:link})} key={i} style={{width:'48%',borderRadius:10,alignContent:'center',alignItems:'center',justifyContent:'center',minHeight:220,marginTop:10}}>
                                 <View style={{width:'100%',height:220,backgroundColor:'#F4B55A',borderRadius:10,padding:1,alignContent:'center',justifyContent:'center',alignItems:'center'}}>
                                     <Pdf
-                                        source={{ uri: link, cache: true }}
+                                        source={{ uri: link, cache: false }}
                                         trustAllCerts={false}
                                         style={{width:'100%',height:'100%',borderRadius:10}}
                                         enableAntialiasing={true}

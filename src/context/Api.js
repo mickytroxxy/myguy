@@ -157,20 +157,21 @@ export const uploadFile = async (file,path,cb) =>{
     const url = await st.getDownloadURL(uploadTask.ref);
     cb(url)
 }
-export const uploadPDF = async (uri,documentId,BASE_URL,cb)=>{
+export const uploadToNode = async (uri,documentId,BASE_URL,type,fileCategory,cb)=>{
     const apiUrl = BASE_URL+"/uploadPDF";
     const name = uri.substr(uri.lastIndexOf('/') + 1);
     const formData = new FormData();
-    formData.append('fileUrl', {uri,name,type: `application/pdf`});
+    formData.append('fileUrl', {uri,name,type});
     formData.append('documentId', documentId);
+    formData.append('fileCategory', fileCategory);
     try {
-        await axios({
+        const response = await axios({
             method: "post",
             url: apiUrl,
             data: formData,
             headers: {"Content-Type": "multipart/form-data"},
         });
-        cb(true);
+        cb(response);
     } catch(error) {
         console.log(error)
     }

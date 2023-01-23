@@ -9,7 +9,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import * as Location from 'expo-location';
 import * as Permissions from 'expo-permissions';
 import * as ImagePicker from 'expo-image-picker';
-import { createData, getAllProjects, getDataList, getDocuments, getMyProjects, getSecrets, getUserDetails, updateData, uploadFile, uploadPDF } from './Api';
+import { createData, getAllProjects, getDataList, getDocuments, getMyProjects, getSecrets, getUserDetails, updateData, uploadFile, uploadToNode } from './Api';
 import axios from 'axios';
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
@@ -171,7 +171,7 @@ export const AppProvider = (props) =>{
             if(res){
                 const time = Date.now();
                 const documentId = documentType !== "ID DOCUMENT" ? (time + Math.floor(Math.random()*89999+10000)).toString() : idNo;
-                uploadPDF(file,documentId,secrets.BASE_URL, () => {
+                uploadToNode(file,documentId,secrets.BASE_URL,`application/pdf`,`document`, () => {
                     const url = `/${documentId}.pdf`
                     const obj = {documentOwner:accountInfo.id,url,documentType,documentId,time,signies:[]};
                     if(createData("documents",documentId,obj)){

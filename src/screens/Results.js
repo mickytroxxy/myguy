@@ -114,12 +114,14 @@ const PageContent = ({navigation}) =>{
                             <ViewShot ref={viewRef}>
                                 <Text style={{fontFamily:fontLight,textAlign:'left',alignSelf:'flex-start'}}>{AIResults}</Text>
                             </ViewShot>
-                            <View style={{flexDirection:'row',justifyContent:'space-between',paddingBottom:30}}>
-                                <TouchableOpacity onPress={initializePrompt} style={{borderWidth:1,borderColor:'#14678B',padding:15,borderRadius:10,marginTop:30}}><Text style={{fontFamily:fontBold,color:'#14678B'}}>RETRY</Text></TouchableOpacity>
-                                <TouchableOpacity onPress={copyToClipboard} style={{borderWidth:1,borderColor:'#14678B',padding:15,borderRadius:10,marginTop:30}}><Text style={{fontFamily:fontBold,color:'#14678B'}}>COPY TEXT</Text></TouchableOpacity>
-                                <TouchableOpacity onPress={generatePDF} style={{borderWidth:1,borderColor:'#14678B',padding:15,borderRadius:10,marginTop:30}}><Text style={{fontFamily:fontBold,color:'#14678B'}}>UPLOAD</Text></TouchableOpacity>
-                            </View>
                         </ScrollView>
+                    }
+                    {AIResults && 
+                        <View style={{position:'absolute',flexDirection:'row',backgroundColor:'rgba(0, 0, 0, 0.5)',bottom:0,left:0,width:'100%',zIndex:100,padding:5,justifyContent:'space-between',borderRadius:5}}>
+                            <TouchableOpacity onPress={initializePrompt} style={{borderWidth:1,borderColor:'#14678B',padding:15,borderRadius:5,marginTop:10}}><Text style={{fontFamily:fontBold,color:'#14678B'}}>RETRY</Text></TouchableOpacity>
+                            <TouchableOpacity onPress={copyToClipboard} style={{borderWidth:1,borderColor:'#14678B',padding:15,borderRadius:5,marginTop:10}}><Text style={{fontFamily:fontBold,color:'#14678B'}}>COPY TEXT</Text></TouchableOpacity>
+                            <TouchableOpacity onPress={generatePDF} style={{borderWidth:1,borderColor:'#14678B',padding:15,borderRadius:5,marginTop:10}}><Text style={{fontFamily:fontBold,color:'#14678B'}}>UPLOAD</Text></TouchableOpacity>
+                        </View>
                     }
                     {!AIResults && 
                         <View style={{flex:1,justifyContent:'center'}}>
@@ -136,8 +138,6 @@ const styles = StyleSheet.create({
     container: {
       flex: 1,
       padding: 10,
-      justifyContent: 'center',
-      alignItems: 'center',
     },
     textareaContainer: {
       minHeight: 100,

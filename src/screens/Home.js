@@ -99,7 +99,7 @@ export default function Home({navigation}) {
               {selectedComponent === "MY ACCOUNT" && 
                 <View style={{paddingLeft:15,flex:1,height:70,marginTop:15,backgroundColor:'rgba(0, 0, 0, 0.1)',borderRadius:15,justifyContent:'center',borderBottomRightRadius:50}}>
                   <Text style={{color:'#fff',fontFamily:fontBold}}>{accountInfo ? accountInfo.fname : "GUEST ACCOUNT"}</Text>
-                  <Text style={{color:'orange',fontFamily:fontBold}}>{accountInfo.id}</Text>
+                  <Text style={{color:'orange',fontFamily:fontBold}}>{accountInfo ? accountInfo.id : "00000000"}</Text>
                 </View>
               }
               {selectedComponent === "PROJECTS" && 

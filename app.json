@@ -48,7 +48,7 @@
         "READ_EXTERNAL_STORAGE",
         "NOTIFICATIONS"
       ],
-      "versionCode": 10001,
+      "versionCode": 10002,
       "config": {
         "googleMaps": {
           "apiKey": "AIzaSyCU6G0XCnYDnsioSm8yoDY418dL6VrA6_w"

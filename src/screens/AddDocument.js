@@ -20,9 +20,9 @@ const AddDocument = memo(({navigation}) => {
             if(document === "ID DOCUMENT"){
                 setModalState({isVisible:true,attr:{headerText:'ID | PASSPORT NUMBER',field:'AI_DOC',hint:`Enter Your Real ID Or Passport Number associated with the document you are about to upload!`,placeholder:'Enter ID Number Or Passport Number...',handleChange:(field,idNo) => {
                     if(idNo.length > 6){
-                        getDocumentsById(idNo.toString().toUpperCase(),(response) => {
+                        getDocumentsById(idNo.toString().trim().toUpperCase(),(response) => {
                             if(response.length === 0){
-                                handleFileUpload(document,result.uri,navigation,idNo.toString().toUpperCase());
+                                handleFileUpload(document,result.uri,navigation,idNo.toString().trim().toUpperCase());
                             }else{
                                 const {documentOwner} = response[0];
                                 getUserDetails(documentOwner,(accountOwner) => {
