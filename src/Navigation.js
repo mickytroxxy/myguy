@@ -18,6 +18,7 @@ import AddDocument from './screens/AddDocument';
 import Participants from './screens/Participants';
 import ActivateProject from './screens/Subcribe';
 import RequestApp from './screens/RequestApp';
+import ReviewDoc from './screens/ReviewDoc';
 const Stack = createNativeStackNavigator();
 function Navigation() {
   return (
@@ -42,6 +43,7 @@ function Navigation() {
         <Stack.Screen name="Participants" component={Participants} />
         <Stack.Screen name="ActivateProject" component={ActivateProject} />
         <Stack.Screen name="RequestApp" component={RequestApp} />
+        <Stack.Screen name="ReviewDoc" component={ReviewDoc} />
       </Stack.Navigator>
     </NavigationContainer>
   );

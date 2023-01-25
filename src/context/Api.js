@@ -148,6 +148,14 @@ export const updateData = async (tableName,docId,obj) => {
         return false;
     }
 }
+export const deleteData = async (tableName,docId) => {
+    try {
+        const q = await deleteDoc(doc(db, tableName, docId));
+        return q;
+    } catch (e) {
+        return false;
+    }
+}
 export const uploadFile = async (file,path,cb) =>{
     const storage = st.getStorage(app);
     const fileRef = st.ref(storage, path);

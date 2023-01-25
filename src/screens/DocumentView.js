@@ -76,8 +76,12 @@ const PageContent = ({navigation}) =>{
         uploadFile(url,`signatures/${signatureId}`, selfie => {
             const obj = {...accountInfo,selfie,documentId,signatureId,time,similarity};
             if(createData("signatures",signatureId,obj)){
-                updateData("documents",documentId,{signies:[...documentInfo.signies,{signatureId,signie:accountInfo.id}]})
-                setDocuments(documents.map(doc => doc.documentId === documentId ? {...doc,signies:[...doc.signies,{signatureId,signie:accountInfo.id}]} : doc))
+                let signies = [...documentInfo.signies,{signatureId,signie:accountInfo.id}];
+                if(documentInfo.documentType === "ID DOCUMENT" && signies.length > 2){
+                    signies.shift();
+                }
+                updateData("documents",documentId,{signies})
+                setDocuments(documents.map(doc => doc.documentId === documentId ? {...doc,signies} : doc))
                 setIsSigned(true);
                 setLoadingState({isLoading:false,text:''});
                 if(documentInfo.documentOwner === accountInfo.id){
@@ -152,9 +156,7 @@ const PageContent = ({navigation}) =>{
         let path = pathWithCompany[pathWithCompany.length-1];
         const file_name = path
         FileSystem.downloadAsync(url, FileSystem.documentDirectory + file_name).then(async ({ uri }) => {
-            console.log('Finished downloading to ', uri);
             shareFile(uri)
-            
         }).catch(error => {
             console.error(error);
         });

@@ -5,8 +5,6 @@ import {Feather, FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { AppContext } from '../context/AppContext';
 import ViewShot from "react-native-view-shot";
 import { Configuration, OpenAIApi } from 'openai';
-import {printToFileAsync} from 'expo-print';
-import { updateData } from '../context/Api';
 const RootStack = createStackNavigator();
 let object;
 const { width, height } = Dimensions.get('window');
@@ -60,41 +58,12 @@ const PageContent = ({navigation}) =>{
     }
 
     const initializePrompt = useCallback(() => {
-        const prompt = !guideLines ? `Generate a ${type} based on ${summary}` : `Generate a ${type} based on ${summary}, The result should be an array of object like [{section:"sectionText",content:"contentText"}]`;
-        generateText(prompt)
+        generateText(`Generate a ${type} based on ${summary}`)
         setIsLoading(true)
     })
     const copyToClipboard = () => {
         Clipboard.setString(AIResults)
         showToast(AIResults)
-    }
-    let generatePDF = async () => {
-        const html = `
-            <html>
-                <head>
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
-                </head>
-                <body style="text-align: left;">
-                    <div style="white-space: pre-wrap;font-size:16px">${AIResults}</div>
-                </body>
-            </html>
-        `;
-        const file = await printToFileAsync({
-            html:html,
-            base64:false,
-            margins: {
-                left: 20,
-                top: 50,
-                right: 20,
-                bottom: 100,
-            },
-        })
-        await handleFileUpload(type,file.uri,navigation);
-        const documents = accountInfo.documents - 1;
-        updateData("clients",accountInfo.id,{documents})
-        setAccountInfo(prevState => ({...prevState,documents}));
-        navigation.goBack();
-        navigation.goBack();
     }
     useEffect(() => {
         initializePrompt()
@@ -111,16 +80,16 @@ const PageContent = ({navigation}) =>{
                 <View style={{flex:1}}>
                     {AIResults && 
                         <ScrollView showsVerticalScrollIndicator={false} style={{flex:1}}>
-                            <ViewShot ref={viewRef}>
+                            <ViewShot ref={viewRef} style={{paddingBottom:100}}>
                                 <Text style={{fontFamily:fontLight,textAlign:'left',alignSelf:'flex-start'}}>{AIResults}</Text>
                             </ViewShot>
                         </ScrollView>
                     }
                     {AIResults && 
-                        <View style={{position:'absolute',flexDirection:'row',backgroundColor:'rgba(0, 0, 0, 0.5)',bottom:0,left:0,width:'100%',zIndex:100,padding:5,justifyContent:'space-between',borderRadius:5}}>
+                        <View style={{position:'absolute',flexDirection:'row',backgroundColor:'rgba(0, 0, 0, 0.8)',bottom:0,left:0,width:'100%',zIndex:100,padding:5,justifyContent:'space-between',borderRadius:5}}>
                             <TouchableOpacity onPress={initializePrompt} style={{borderWidth:1,borderColor:'#14678B',padding:15,borderRadius:5,marginTop:10}}><Text style={{fontFamily:fontBold,color:'#14678B'}}>RETRY</Text></TouchableOpacity>
                             <TouchableOpacity onPress={copyToClipboard} style={{borderWidth:1,borderColor:'#14678B',padding:15,borderRadius:5,marginTop:10}}><Text style={{fontFamily:fontBold,color:'#14678B'}}>COPY TEXT</Text></TouchableOpacity>
-                            <TouchableOpacity onPress={generatePDF} style={{borderWidth:1,borderColor:'#14678B',padding:15,borderRadius:5,marginTop:10}}><Text style={{fontFamily:fontBold,color:'#14678B'}}>UPLOAD</Text></TouchableOpacity>
+                            <TouchableOpacity onPress={() => navigation.navigate("ReviewDoc",{AIResults,type})} style={{borderWidth:1,borderColor:'#14678B',padding:15,borderRadius:5,marginTop:10}}><Text style={{fontFamily:fontBold,color:'#14678B'}}>REVIEW</Text></TouchableOpacity>
                         </View>
                     }
                     {!AIResults && 

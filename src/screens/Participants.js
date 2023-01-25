@@ -26,7 +26,7 @@ const Participants = memo(({navigation,route}) => {
             <Text style={{fontFamily:fontBold,textAlign:'center'}}>ALL PARTICIPANTS</Text>
             <ScrollView showsVerticalScrollIndicator={false} style={{marginTop:15}}>
                 <Animatable.View animation="slideInRight" duration={750} useNativeDriver={true} style={{flexDirection:'row',alignContent:'center',alignItems:'center',display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',flexWrap: 'wrap'}}>
-                    {participants?.length > 0 && participants?.map((item,i)=>{
+                    {participants?.length > 0 && participants?.sort((a,b)=>b.time - a.time)?.map((item,i)=>{
                         const {fname,selfie,similarity} = item;
                         return(
                             <TouchableOpacity key={i} style={{width:'48%',borderRadius:10,alignContent:'center',alignItems:'center',justifyContent:'center',minHeight:220,marginTop:10}}>

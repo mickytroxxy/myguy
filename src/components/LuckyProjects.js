@@ -14,7 +14,7 @@ const LuckyProjects = memo(({navigation,data}) => {
                 {data?.map(({avatar,fname,funded,target,projectId,details,votes,funders,subCategory},i) => {
                     return(
                         <View key={i} style={{flex:1}}>
-                            <TouchableOpacity style={{backgroundColor:'#fff',flex:1,marginRight:5,padding:5,borderRadius:10,width:220,borderWidth:0.5,borderColor:'#fff'}} onPress={() => {
+                            <TouchableOpacity style={{backgroundColor:'#fff',flex:1,marginRight:5,padding:5,borderRadius:10,width:220,borderWidth:0.5,borderColor:'#D7D6D4'}} onPress={() => {
                                 getUserProfile(navigation,projectId)
                             }}>
                                 

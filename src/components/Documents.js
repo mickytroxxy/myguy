@@ -16,7 +16,7 @@ const Products = memo(({navigation}) => {
     return (
         <View>
             <ScrollView showsVerticalScrollIndicator={false} style={{marginTop:15}}>
-                <TouchableOpacity onPress={() => navigation.navigate("AddDocument")} style={{borderRadius:10,padding:10,borderColor:'green',borderWidth:1,flexDirection:'row',width:'100%',alignSelf:'center'}}>
+                <TouchableOpacity onPress={() => navigation.navigate("AddDocument")} style={{borderRadius:5,padding:10,borderColor:'green',borderWidth:1,flexDirection:'row',width:'100%',alignSelf:'center'}}>
                     <MaterialIcons name='add-circle' size={24} color="green" />
                     <View style={{marginLeft:10,justifyContent:'center'}}>
                         <Text style={{fontFamily:fontBold,color:'green',fontSize:11}}>ADD DOCUMENT</Text>
@@ -27,12 +27,12 @@ const Products = memo(({navigation}) => {
                         const {documentType,documentId,url} = item;
                         const link = `${secrets.BASE_URL}${url}`
                         return(
-                            <TouchableOpacity onPress={() => navigation.navigate("DocumentView",{documentType,documentId,url:link})} key={i} style={{width:'48%',borderRadius:10,alignContent:'center',alignItems:'center',justifyContent:'center',minHeight:220,marginTop:10}}>
-                                <View style={{width:'100%',height:220,backgroundColor:'#F4B55A',borderRadius:10,padding:1,alignContent:'center',justifyContent:'center',alignItems:'center'}}>
+                            <TouchableOpacity onPress={() => navigation.navigate("DocumentView",{documentType,documentId,url:link})} key={i} style={{width:'49%',borderRadius:10,alignContent:'center',alignItems:'center',justifyContent:'center',minHeight:220,marginTop:10}}>
+                                <View style={{width:'100%',height:230,backgroundColor:'#D7D6D4',borderRadius:5,padding:1,alignContent:'center',justifyContent:'center',alignItems:'center'}}>
                                     <Pdf
-                                        source={{ uri: link, cache: false }}
+                                        source={{ uri: link, cache: true }}
                                         trustAllCerts={false}
-                                        style={{width:'100%',height:'100%',borderRadius:10}}
+                                        style={{width:'100%',height:'100%',borderRadius:5,backgroundColor:'#fff'}}
                                         enableAntialiasing={true}
                                         fitWidth={true}
                                     />

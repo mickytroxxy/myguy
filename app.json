@@ -20,14 +20,14 @@
     "ios": {
       "bundleIdentifier": "com.empiredigitals.doneDeal",
       "supportsTablet": false,
-      "buildNumber": "1.0.0",
+      "buildNumber": "1.0.1",
       "infoPlist": {
         "NSCameraUsageDescription": "Your photo will be used as a profile picture or avatar. This helps scanners to identify the product owner.",
         "NSPhotoLibraryUsageDescription":"Your photo will be used as a profile picture or avatar. This helps scanners to identify the product owner",
         "NSPhotoLibraryAddUsageDescription": "Your photo will be used as a profile picture or avatar. This helps scanners to identify the product owner",
-        "NSLocationWhenInUseUsageDescription": "We need to know your current location to find the near places and nearby users. Do you allow us to use location service on this device ?",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "We need to know your current location to find the near places and nearby users. Do you allow us to use location service on this device ?",
-        "NSLocationAlwaysUsageDescription": "We need to know your current location to find the near places and nearby users. Do you allow us to use location service on this device ?"
+        "NSLocationWhenInUseUsageDescription": "We need to know your current location to help you find nearby projects or investors",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "We need to know your current location to help you find nearby projects or investors",
+        "NSLocationAlwaysUsageDescription": "We need to know your current location to help you find nearby projects or investors"
       }
     },
     "android": {

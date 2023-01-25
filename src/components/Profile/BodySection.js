@@ -1,16 +1,16 @@
 import React, { memo, useContext, useEffect, useState } from 'react'
 import { View, StyleSheet, TouchableOpacity, Text, Platform} from 'react-native'
 import { AppContext } from '../../context/AppContext'
-import { FontAwesome, Ionicons, FontAwesome5 , MaterialIcons, Feather} from "@expo/vector-icons";
+import { FontAwesome, Ionicons, FontAwesome5 , AntDesign, Feather} from "@expo/vector-icons";
 import Stats from './components/Stats';
 import Photos from './components/Photos';
 import About from './components/About';
 import { RequestBtns } from './components/RequestBtns';
-import { updateData } from '../../context/Api';
+import { deleteData, updateData } from '../../context/Api';
 let return_url,cancel_url;
 const mechantId = 15759218;
 const BodySection = memo(({attr}) => {
-    const {appState:{accountInfo,updateProfile,setConfirmDialog,showToast,setModalState,setActiveProfile,fontFamilyObj:{fontBold,fontLight}}} = useContext(AppContext);
+    const {appState:{accountInfo,updateProfile,setConfirmDialog,showToast,setModalState,setActiveProfile,setMyProjects,fontFamilyObj:{fontBold,fontLight}}} = useContext(AppContext);
     const {navigation,profileOwner,activeProfile,page} = attr;
     const {votes,funders} = activeProfile;
     const iVoted = votes.indexOf(accountInfo?.id);
@@ -85,6 +85,23 @@ const BodySection = memo(({attr}) => {
                                 <Feather name='activity' size={48} color="#fff" />
                                 <View style={{marginLeft:10,justifyContent:'center'}}>
                                     <Text style={{fontFamily:fontBold,color:'#fff',fontSize:18}}>ACTIVATE PROJECT</Text>
+                                </View>
+                            </TouchableOpacity>
+                        }
+                        {profileOwner && 
+                            <TouchableOpacity onPress={() => {
+                                setConfirmDialog({isVisible:true,text:`If you delete your account, you will no longer be able to retrieve your data, think about this action carefully before proceeding`,okayBtn:'CANCEL',severity:true,cancelBtn:'DELETE',response:(res) => { 
+                                    if(!res){
+                                        deleteData("projects",activeProfile.projectId);
+                                        showToast("Your project has been deleted!");
+                                        navigation.goBack();
+                                        setMyProjects(prevClients => (prevClients.filter(item => item.projectId !== activeProfile.projectId)));
+                                    }
+                                }})
+                            }} style={{borderRadius:10,padding:20,borderColor:'red',borderWidth:2,flexDirection:'row',width:'100%',marginTop:10}}>
+                                <AntDesign name='delete' size={48} color="tomato" />
+                                <View style={{marginLeft:10,justifyContent:'center'}}>
+                                    <Text style={{fontFamily:fontBold,color:'tomato',fontSize:18}}>DELETE PROJECT</Text>
                                 </View>
                             </TouchableOpacity>
                         }

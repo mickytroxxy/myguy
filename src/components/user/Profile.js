@@ -2,12 +2,12 @@ import React, { memo, useContext, useEffect, useState } from 'react'
 import { View, Text, TouchableOpacity, Image, Platform } from 'react-native'
 import { AppContext } from '../../context/AppContext'
 import * as Animatable from 'react-native-animatable';
-import { Feather, FontAwesome, MaterialIcons } from "@expo/vector-icons";
+import { Feather, FontAwesome, MaterialIcons, AntDesign } from "@expo/vector-icons";
 import LuckyProjects from '../LuckyProjects';
 import Products from '../Documents';
-import { getMyProjects } from '../../context/Api';
+import { deleteData, getMyProjects } from '../../context/Api';
 const Profile = memo(({navigation}) => {
-  const {appState:{accountInfo,myProjects,loadAIDocs,loadSignatures,logout,setConfirmDialog,fontFamilyObj:{fontBold,fontLight}}} = useContext(AppContext);
+  const {appState:{accountInfo,myProjects,showToast,loadAIDocs,loadSignatures,logout,setConfirmDialog,fontFamilyObj:{fontBold,fontLight}}} = useContext(AppContext);
   const {documents,signatures} = accountInfo;
   return (
     <View style={{marginTop:15}}>
@@ -48,6 +48,20 @@ const Profile = memo(({navigation}) => {
             }})
           }} style={{alignContent:'center',alignItems:'center'}}>
           <Feather name='lock' size={48} color="tomato" />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => {
+            setConfirmDialog({isVisible:true,text:`If you delete your account, you will no longer be able to retrieve your data, think about this action carefully before proceeding`,okayBtn:'CANCEL',severity:true,cancelBtn:'DELETE',response:(res) => { 
+                if(!res){
+                    deleteData("clients",accountInfo.id);
+                    showToast("Your account has been deleted!");
+                    logout();
+                }
+            }})
+        }} style={{borderRadius:10,padding:8,borderColor:'red',borderWidth:2,flexDirection:'row',width:'100%',marginTop:10}}>
+            <AntDesign name='delete' size={24} color="tomato" />
+            <View style={{marginLeft:10,justifyContent:'center'}}>
+                <Text style={{fontFamily:fontBold,color:'tomato',fontSize:12}}>DELETE ACCOUNT</Text>
+            </View>
         </TouchableOpacity>
       </Animatable.View>
     </View>

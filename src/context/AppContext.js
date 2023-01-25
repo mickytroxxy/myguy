@@ -183,9 +183,9 @@ export const AppProvider = (props) =>{
         }})
     }
     const handleUploadPhotos = (field,page,projectId) => {
-        let location = `${field}/${accountInfo.projectId}`;
+        let location = `${field}/${projectId}`;
         if(field === "photos"){
-            location = `${field}/${accountInfo.projectId}/${(Date.now() +  Math.floor(Math.random()*89999+10000)).toString()}`;
+            location = `${field}/${projectId}/${(Date.now() +  Math.floor(Math.random()*89999+10000)).toString()}`;
         }
         if(field !== "selfiePhoto"){
             setConfirmDialog({isVisible:true,text:`Would Like To Select From The Gallery Or You Would Like To Snap Using Your Camera?`,severity:false,okayBtn:'GALLERY',cancelBtn:'CAMERA',response:(res) => { 
@@ -221,6 +221,12 @@ export const AppProvider = (props) =>{
         if(projectProfile.length > 0){
             setActiveProfile(projectProfile[0]);
             navigation.navigate("Profile")
+        }else{
+            const projectProfile = myProjects?.filter(client => client.projectId === projectId);
+            if(projectProfile.length > 0){
+                setActiveProfile(projectProfile[0]);
+                navigation.navigate("Profile")
+            }
         }
     }
     const updateProfile = (field,value) => {
@@ -315,7 +321,7 @@ export const AppProvider = (props) =>{
         }})
     }
     const appState = {
-        accountInfo,plans,myProjects,setPlans,goToWebView,loadAIDocs,loadSignatures,secrets,categories,selectedCategory,industry,setIndustry,setCategories,updateProfile,handleUploadPhotos,handleFileUpload,clients,setClients,getUserProfile,activeProfile,setActiveProfile,documentTypes,setDocumentTypes,documents,setDocuments,pickCurrentLocation,nativeLink,setAccountInfo,saveUser,logout,fontFamilyObj,setModalState,setConfirmDialog,getLocation,sendPushNotification,showToast,takePicture,pickImage,sendSms,phoneNoValidation,countryData,setCountryData
+        accountInfo,plans,myProjects,setMyProjects,setPlans,goToWebView,loadAIDocs,loadSignatures,secrets,categories,selectedCategory,industry,setIndustry,setCategories,updateProfile,handleUploadPhotos,handleFileUpload,clients,setClients,getUserProfile,activeProfile,setActiveProfile,documentTypes,setDocumentTypes,documents,setDocuments,pickCurrentLocation,nativeLink,setAccountInfo,saveUser,logout,fontFamilyObj,setModalState,setConfirmDialog,getLocation,sendPushNotification,showToast,takePicture,pickImage,sendSms,phoneNoValidation,countryData,setCountryData
     }
     return(
         <AppContext.Provider value={{appState}}>
@@ -336,7 +342,7 @@ const getCurrentLocation = (cb) =>{
             const hash = geohash.encode(latitude, longitude);
             cb(latitude,longitude,heading,hash);
         },error => {
-            showToast(error.message)
+            //showToast(error.message)
             const hash = geohash.encode(latitude, longitude);
             cb(latitude,longitude,0,hash);
         },{ 

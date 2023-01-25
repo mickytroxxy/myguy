@@ -50,7 +50,7 @@ const Projects = memo(({navigation}) => {
                         const iFunded = funders.indexOf(accountInfo?.id);
                         return(
                             <View key={i} style={{flex:1}}>
-                                <TouchableOpacity style={{backgroundColor:'#fff',flex:1,marginTop:10,padding:5,borderRadius:10,width:'100%',borderColor:'#F4B55A',borderWidth:0.5}} onPress={() => {getUserProfile(navigation,projectId)}}>
+                                <TouchableOpacity style={{backgroundColor:'#fff',flex:1,marginTop:10,padding:5,borderRadius:10,width:'100%',borderColor:'#D7D6D4',borderWidth:0.5}} onPress={() => {getUserProfile(navigation,projectId)}}>
                                     {avatar !== "" && <Image source={{uri:avatar}} resizeMode="cover" style={{width:'100%',height:160,borderRadius:10}} />}
                                     {avatar === "" && <View style={{backgroundColor:'#14678B',width:'100%',height:160,borderRadius:10,justifyContent:'center',alignItems:'center'}}><Text style={{color:'#fff',fontFamily:fontBold}}>NO COMPANY LOGO</Text></View>}
                                     <View style={{marginTop:5}}>
