@@ -32,7 +32,7 @@ export const AppProvider = (props) =>{
     const [confirmDialog,setConfirmDialog] = useState({isVisible:false,text:'Would you like to come today for a fist?',okayBtn:'VERIFY',cancelBtn:'CANCEL',isSuccess:false})
     const [currentLocation,setCurrentLocation] = useState(null);
     const [countryData,setCountryData] = useState({dialCode:'+27',name:'South Africa',flag:'https://cdn.kcak11.com/CountryFlags/countries/za.svg'})
-    const [secrets,setSecrets] = useState({BASE_URL:"https://myguy-server-production.up.railway.app",OPENAI_KEY:"",AI_DOC_PRICE:15,SIGNATURE_PRICE:50,SMS_KEY:"aW5mb0BlbXBpcmVkaWdpdGFscy5vcmc6ZW1waXJlRGlnaXRhbHMxIUA="});
+    const [secrets,setSecrets] = useState({BASE_URL:"https://myguy-server-production.up.railway.app",OPENAI_KEY:"",AI_DOC_PRICE:15,SIGNATURE_PRICE:50,SMS_KEY:"aW5mb0BlbXBpcmVkaWdpdGFscy5vcmc6ZW1waXJlRGlnaXRhbHMxIUA=",GOOGLE_MAP_API_KEY:"AIzaSyB_Yfjca_o4Te7-4Lcgi7s7eTjrmer5g5Y"});
     const [clients,setClients] = useState(null);
     const [activeProfile,setActiveProfile] = useState(null);
     const [myProjects,setMyProjects] = useState(null);
@@ -320,6 +320,19 @@ export const AppProvider = (props) =>{
             }
         }})
     }
+    const pickCurrentLocation = (cb) =>{
+        getCurrentLocation((latitude,longitude)=>{
+            axios.request({method: 'post',url : "https://maps.googleapis.com/maps/api/geocode/json?latlng="+latitude+","+ longitude+"&sensor=true&key="+secrets.GOOGLE_MAP_API_KEY}).then((response) => { 
+                if(response){
+                    const short_name = response.data.results[0].address_components.filter(item => item.types.filter(x => x === 'country')[0])[0].short_name
+                    const long_name = response.data.results[0].address_components.filter(item => item.types.filter(x => x === 'country')[0])[0].long_name 
+                    cb({latitude,longitude,venueName:response.data.results[0].formatted_address,short_name,long_name})
+                }
+            }).catch((e) => {
+                cb({latitude,longitude,venueName:0,short_name:0,long_name:0})
+            });
+        })
+    }
     const appState = {
         accountInfo,plans,myProjects,setMyProjects,setPlans,goToWebView,loadAIDocs,loadSignatures,secrets,categories,selectedCategory,industry,setIndustry,setCategories,updateProfile,handleUploadPhotos,handleFileUpload,clients,setClients,getUserProfile,activeProfile,setActiveProfile,documentTypes,setDocumentTypes,documents,setDocuments,pickCurrentLocation,nativeLink,setAccountInfo,saveUser,logout,fontFamilyObj,setModalState,setConfirmDialog,getLocation,sendPushNotification,showToast,takePicture,pickImage,sendSms,phoneNoValidation,countryData,setCountryData
     }
@@ -361,19 +374,6 @@ const askPermissionsAsync = async() => {
     }else{
         return true;
     }
-}
-const pickCurrentLocation = (cb) =>{
-    getCurrentLocation((latitude,longitude)=>{
-        axios.request({method: 'post',url : "https://maps.googleapis.com/maps/api/geocode/json?latlng="+latitude+","+ longitude+"&sensor=true&key=AIzaSyB_Yfjca_o4Te7-4Lcgi7s7eTjrmer5g5Y"}).then((response) => { 
-            if(response){
-                const short_name = response.data.results[0].address_components.filter(item => item.types.filter(x => x === 'country')[0])[0].short_name
-                const long_name = response.data.results[0].address_components.filter(item => item.types.filter(x => x === 'country')[0])[0].long_name 
-                cb({latitude,longitude,venueName:response.data.results[0].formatted_address,short_name,long_name})
-            }
-        }).catch((e) => {
-            //alert(e.response);
-        });
-    })
 }
 const showToast = (message)=>{
     if (Platform.OS == 'android') {

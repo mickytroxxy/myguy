@@ -49,7 +49,7 @@ const DocumentView = ({navigation,route}) => {
     )
 };
 const PageContent = ({navigation}) =>{
-    const {appState:{showToast,loadSignatures,setConfirmDialog,setModalState,sendPushNotification,secrets,accountInfo,setAccountInfo,fontFamilyObj:{fontBold,fontLight},documents,setDocuments} } = useContext(AppContext);
+    const {appState:{showToast,pickCurrentLocation,loadSignatures,setConfirmDialog,setModalState,sendPushNotification,secrets,accountInfo,setAccountInfo,fontFamilyObj:{fontBold,fontLight},documents,setDocuments} } = useContext(AppContext);
     const {url,documentId} = object;
     const [isSigned,setIsSigned] = useState(false);
     const viewRef = useRef();
@@ -71,31 +71,37 @@ const PageContent = ({navigation}) =>{
         }
     }
     const saveSignature = (url,similarity) => {
-        const time = Date.now();
-        const signatureId = (time + Math.floor(Math.random()*89999+10000)).toString();
-        uploadFile(url,`signatures/${signatureId}`, selfie => {
-            const obj = {...accountInfo,selfie,documentId,signatureId,time,similarity};
-            if(createData("signatures",signatureId,obj)){
-                let signies = [...documentInfo.signies,{signatureId,signie:accountInfo.id}];
-                if(documentInfo.documentType === "ID DOCUMENT" && signies.length > 2){
-                    signies.shift();
-                }
-                updateData("documents",documentId,{signies})
-                setDocuments(documents.map(doc => doc.documentId === documentId ? {...doc,signies} : doc))
-                setIsSigned(true);
-                setLoadingState({isLoading:false,text:''});
-                if(documentInfo.documentOwner === accountInfo.id){
-                    const signatures = accountInfo.signatures - 1;
-                    updateData("clients",accountInfo.id,{signatures})
-                    setAccountInfo(prevState => ({...prevState,signatures}))
-                }
-                getUserDetails(documentInfo.documentOwner,(accountOwner) => {
-                    if(accountOwner.length > 0){
-                        if(accountOwner[0]?.notificationToken){
-                            sendPushNotification(accountOwner[0]?.notificationToken,"DOCUMENT SIGNED",`Hello ${accountOwner[0].fname}, Your ${documentInfo.documentType} has been signed by ${accountInfo.fname}`,{});
+        pickCurrentLocation((location) => {
+            if(location.venueName !== 0 && location.short_name !== 0){
+                const time = Date.now();
+                const signatureId = (time + Math.floor(Math.random()*89999+10000)).toString();
+                uploadFile(url,`signatures/${signatureId}`, selfie => {
+                    const obj = {...accountInfo,selfie,documentId,signatureId,time,similarity,location};
+                    if(createData("signatures",signatureId,obj)){
+                        let signies = [...documentInfo.signies,{signatureId,signie:accountInfo.id}];
+                        if(documentInfo.documentType === "ID DOCUMENT" && signies.length > 2){
+                            signies.shift();
                         }
+                        updateData("documents",documentId,{signies})
+                        setDocuments(documents.map(doc => doc.documentId === documentId ? {...doc,signies} : doc))
+                        setIsSigned(true);
+                        setLoadingState({isLoading:false,text:''});
+                        if(documentInfo.documentOwner === accountInfo.id){
+                            const signatures = accountInfo.signatures - 1;
+                            updateData("clients",accountInfo.id,{signatures})
+                            setAccountInfo(prevState => ({...prevState,signatures}))
+                        }
+                        getUserDetails(documentInfo.documentOwner,(accountOwner) => {
+                            if(accountOwner.length > 0){
+                                if(accountOwner[0]?.notificationToken){
+                                    sendPushNotification(accountOwner[0]?.notificationToken,"DOCUMENT SIGNED",`Hello ${accountOwner[0].fname}, Your ${documentInfo.documentType} has been signed by ${accountInfo.fname}`,{});
+                                }
+                            }
+                        })
                     }
                 })
+            }else{
+                showToast("YOUR LOCATION IS REQUIRED!")
             }
         })
     }
